@@ -1,5 +1,3 @@
-using System.Security.Authentication.ExtendedProtection;
-using System.Text;
 using GFS.helper;
 using GFS.Structures;
 
@@ -18,8 +16,9 @@ public class FileSystemManager
     {
         root = new FileSystemNode("/", "", true);
         InitTestData();
-        Console.WriteLine(SerializeFs());
-        Console.WriteLine("Node by path " + getNodeByPath("/sub2/sub3/file5"));
+        var fs = SerializeFs();
+        Console.WriteLine(fs);
+        DeserializeFs(fs);
     }
 
     private void InitTestData()
@@ -48,9 +47,17 @@ public class FileSystemManager
         return output.ToString();
     }
 
-    private bool DeserializeFs()
+    private bool DeserializeFs(string serializedFS)
     {
         root = new FileSystemNode("/", "", true);
+        var lines = StringHelper.Split(serializedFS, '\n');
+        foreach (var line in lines)
+        {
+            var split = StringHelper.Split(line, ' ');
+            createNode(split[0], split[1], bool.Parse(split[2]));
+        }
+        Console.WriteLine("Deserialized FS:");
+        Console.WriteLine(SerializeFs());
         return true;
     }
 
@@ -67,4 +74,14 @@ public class FileSystemManager
         return current;
     }
 
+    public bool createNode(string filePath, string name, bool isDirectory)
+    {
+        var dir = getNodeByPath(filePath);
+        if (dir == null || !dir.IsDirectory)
+        {
+            return false;
+        }
+        dir.Children.AddLast(new FileSystemNode(filePath, name, isDirectory));
+        return true;
+    }
 }

@@ -39,6 +39,7 @@ public class FileSystemNode
         return output.ToString();
     }
 
+
     public FileSystemNode? getChildByName(string name)
     {
         foreach (var fileSystemNode in Children)

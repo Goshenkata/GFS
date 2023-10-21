@@ -78,7 +78,10 @@ public class StringHelper
             }
         }
 
-        output.AddLast(accumulator.ToString());
+        if (!accumulator.isEmpty())
+        {
+            output.AddLast(accumulator.ToString());
+        }
 
         return output.GetArray();
     }
