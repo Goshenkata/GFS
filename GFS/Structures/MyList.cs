@@ -180,6 +180,11 @@ public class MyList<T> : IEnumerable<T>
         }
         return array;
     }
+
+    public bool isEmpty()
+    {
+        return Count == 0;
+    }
 }
 
 internal class Node<T>

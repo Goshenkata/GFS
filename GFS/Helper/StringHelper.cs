@@ -12,7 +12,7 @@ public class StringHelper
             return Array.Empty<string>();
         }
 
-        StringBuilder accumulator = new StringBuilder();
+        var accumulator = new MyStringBuilder();
         MyList<string> list = new MyList<string>();
         bool isInWhiteSpace = false;
         foreach (var c in command)
@@ -43,7 +43,7 @@ public class StringHelper
 
     public static string ToLowerCase(string s)
     {
-        StringBuilder output = new StringBuilder();
+        var output = new MyStringBuilder();
         foreach (var c in s)
         {
             if (c >= 'A' && c <= 'Z')
@@ -53,5 +53,33 @@ public class StringHelper
         }
 
         return output.ToString();
+    }
+
+    public static string[] Split(string s, char seperator)
+    {
+        MyList<string> output = new MyList<string>();
+        var accumulator = new MyStringBuilder();
+        bool metSeperator = false;
+        foreach (var c in s.ToCharArray())
+        {
+            if (c == seperator)
+            {
+                if (!metSeperator && !accumulator.isEmpty())
+                {
+                    output.AddLast(accumulator.ToString());
+                    accumulator.Clear();
+                    metSeperator = true;
+                }
+            }
+            else
+            {
+                metSeperator = false;
+                accumulator.Append(c);
+            }
+        }
+
+        output.AddLast(accumulator.ToString());
+
+        return output.GetArray();
     }
 }
