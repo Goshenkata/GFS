@@ -6,7 +6,7 @@ public class MyList<T> : IEnumerable<T>
 {
     private Node<T>? head;
     private Node<T>? tail;
-    private int count = 0;
+    private int count;
     public int Count => count;
 
     private Node<T> GetNodeAt(int index)
@@ -165,6 +165,20 @@ public class MyList<T> : IEnumerable<T>
         }
 
         count++;
+    }
+
+    public T[] GetArray()
+    {
+        T[] array = new T[count];
+        int i = 0;
+        var current = head;
+        while (current != null)
+        {
+            array[i] = current.Data;
+            current = current.Next;
+            i++;
+        }
+        return array;
     }
 }
 

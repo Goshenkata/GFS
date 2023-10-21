@@ -4,8 +4,15 @@ namespace GFS;
 
 public class FileSystemManager
 {
-    public bool isInit()
+    private bool b;
+    public bool IsInit()
     {
-        return File.Exists(Messages.DefaultFilename);
+        return b;
+    }
+
+    public void CreateFilesystem(int maxSize, int sectorSize)
+    {
+        Console.WriteLine($"maxSize = {maxSize}, sectorSize = {sectorSize}");
+        b = true;
     }
 }
