@@ -10,7 +10,7 @@ public static class Messages
     public const string FilesystemNotFound = "Filesystem not found.";
 
     public const string FilesystemNotFoundHelp =
-        "File system not found please create one using GFS create {max size} {sector size}\nFor more information type GFS create";
+        "File system not found please create one using GFS create {max size} {sector size}";
 
     public const string Prompt = "GFS: ";
 

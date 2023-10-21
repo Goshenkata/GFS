@@ -58,21 +58,18 @@ public class Program
         //else use args
         else
         {
-            if (fileSystemManager.IsInit()) Console.WriteLine(Messages.FilesystemNotFoundHelp);
-            do
-            {
-                ProcessInput(args, fileSystemManager);
-            } while (!fileSystemManager.IsInit());
-
             ProcessInput(args, fileSystemManager);
+            if (!fileSystemManager.IsInit())
+            {
+                Console.WriteLine(Messages.FilesystemNotFoundHelp);
+            }
         }
     }
 
     private static bool ProcessInput(string[] command, FileSystemManager fileSystemManager)
     {
-        if (command.Length == 0)
+        if (command.Length == 0 || !fileSystemManager.IsInit())
         {
-            Console.Error.WriteLine(Messages.InvalidCommand);
             return false;
         }
 
