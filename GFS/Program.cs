@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using GFS.helper;
 using GFS.Structures;
 
@@ -25,22 +26,10 @@ public class Program
                     command = "create ";
                     Console.Write(Messages.EnterMaxFSSize);
                     var maxSize = Console.ReadLine();
-                    if (maxSize == "")
-                    {
-                        maxSize = "1 GB ";
-                    }
-
                     command += maxSize + " ";
-
                     Console.Write(Messages.EnterSectorSize);
                     var sectorSize = Console.ReadLine();
-                    if (sectorSize == "")
-                    {
-                        sectorSize = "64";
-                    }
-
                     command += sectorSize;
-                    Console.WriteLine(command);
                 } while (!ProcessInput(StringHelper.SplitCommand(command), fileSystemManager) &&
                          !fileSystemManager.IsInit());
             }
@@ -68,7 +57,7 @@ public class Program
 
     private static bool ProcessInput(string[] command, FileSystemManager fileSystemManager)
     {
-        if (command.Length == 0 || !fileSystemManager.IsInit())
+        if (command.Length == 0 || fileSystemManager.IsInit())
         {
             return false;
         }
@@ -76,6 +65,11 @@ public class Program
         switch (command[0])
         {
             case "create":
+                if (command.Length == 1)
+                {
+                    command = new[] { "create", "1", "GB", "64" };
+                }
+
                 return CreateCommand(command, fileSystemManager);
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
@@ -85,6 +79,12 @@ public class Program
 
     private static bool CreateCommand(string[] command, FileSystemManager fileSystemManager)
     {
+        if (fileSystemManager.IsInit())
+        {
+            Console.Error.WriteLine("Filesystem is already initialized");
+            return false;
+        }
+
         if (command.Length != 4)
         {
             Console.Error.WriteLine(Messages.InvalidArgumentList);
@@ -93,7 +93,7 @@ public class Program
 
         bool isValid = int.TryParse(command[1], out int maxSize);
         command[2] = StringHelper.ToLowerCase(command[2]);
-        isValid = isValid && (command[2] == "kb" | command[2] == "mb" || command[2] == "gb");
+        isValid = isValid && (command[2] == "kb" || command[2] == "mb" || command[2] == "gb");
         switch (command[2])
         {
             case "mb":
@@ -105,19 +105,19 @@ public class Program
         }
 
         isValid = int.TryParse(command[3], out int sectorSize) && isValid;
+
+        if (!isValid)
+        {
+            Console.Error.WriteLine(Messages.ErrorCreatingFileSystem);
+            return false;
+        }
+
         if ((sectorSize * 16) > maxSize)
         {
             Console.Error.WriteLine(Messages.Atleast16Sectors);
             return false;
         }
-
-        if (isValid)
-        {
-            fileSystemManager.CreateFilesystem(maxSize, sectorSize);
-            return true;
-        }
-
-        Console.Error.WriteLine(Messages.ErrorCreatingFileSystem);
-        return false;
+        fileSystemManager.CreateFilesystem(maxSize, sectorSize);
+        return true;
     }
 }
