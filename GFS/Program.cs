@@ -1,7 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using GFS.helper;
-using GFS.Structures;
+﻿using GFS.helper;
 
 namespace GFS;
 
@@ -33,6 +30,10 @@ public class Program
                 } while (!ProcessInput(StringHelper.SplitCommand(command), fileSystemManager) &&
                          !fileSystemManager.IsInit());
             }
+            else
+            {
+                fileSystemManager.LoadFs();
+            }
 
             Console.Write(Messages.Prompt);
             var input = Console.ReadLine();
@@ -57,7 +58,7 @@ public class Program
 
     private static bool ProcessInput(string[] command, FileSystemManager fileSystemManager)
     {
-        if (command.Length == 0 || fileSystemManager.IsInit())
+        if (command.Length == 0)
         {
             return false;
         }
@@ -75,6 +76,7 @@ public class Program
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
         }
+
     }
 
     private static bool CreateCommand(string[] command, FileSystemManager fileSystemManager)

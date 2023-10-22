@@ -8,6 +8,12 @@ public class MyStringBuilder
     private int length = 0;
     public int Length => length;
 
+    public MyStringBuilder(string initialString)
+    {
+        Append(initialString);
+    }
+
+    public MyStringBuilder() { }
     public void Append(char c)
     {
         CheckCapacity(length + 1);

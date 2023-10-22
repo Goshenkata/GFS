@@ -35,7 +35,8 @@ public class FileSystemManager
             {
                 stream.SetLength(maxSize * 1024);
             }
-            Console.WriteLine("File system created.");
+
+            Console.WriteLine(Messages.FilesystemCreated);
         }
         catch (Exception e)
         {
@@ -52,8 +53,6 @@ public class FileSystemManager
             {
                 writer.Write(data);
             }
-
-            Console.WriteLine("Metadata written successfully.");
         }
         catch (IOException ex)
         {
@@ -82,12 +81,11 @@ public class FileSystemManager
 
     private string SerializeFs()
     {
-        var output = new MyStringBuilder();
+        var output = new MyStringBuilder($"{sectorSize} {maxSize}\n");
         foreach (var fileSystemNode in root.Children)
         {
             output.Append(fileSystemNode.Serialize());
         }
-
         return output.ToString();
     }
 
@@ -95,14 +93,16 @@ public class FileSystemManager
     {
         root = new FileSystemNode("/", "", true);
         var lines = StringHelper.Split(serializedFS, '\n');
-        foreach (var line in lines)
+        var fsSizeMetadata = StringHelper.Split(lines[0], ' ');
+        this.sectorSize = int.Parse(fsSizeMetadata[0]);
+        this.maxSize = int.Parse(fsSizeMetadata[1]);
+        for (var index = 1; index < lines.Length; index++)
         {
+            var line = lines[index];
             var split = StringHelper.Split(line, ' ');
             createNode(split[0], split[1], bool.Parse(split[2]));
         }
 
-        Console.WriteLine("Deserialized FS:");
-        Console.WriteLine(SerializeFs());
         return true;
     }
 
@@ -129,5 +129,19 @@ public class FileSystemManager
 
         dir.Children.AddLast(new FileSystemNode(filePath, name, isDirectory));
         return true;
+    }
+
+    public void LoadFs()
+    {
+        try
+        {
+            string serializedData = File.ReadAllText(METADATA_FILEPATH);
+            DeserializeFs(serializedData);
+            Console.WriteLine(Messages.FilesystemLoadedSuccessfully);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine();
+        }
     }
 }
