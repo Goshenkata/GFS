@@ -7,6 +7,11 @@ public class FileSystemManager
 {
     private bool b;
     private FileSystemNode root;
+    public static string METADATA_FILEPATH = "GFS.meta";
+    public static string DATA_FILEPATH = "GFS.data";
+    private int sectorSize;
+    private int maxSize;
+
     public bool IsInit()
     {
         return File.Exists("GFS.meta") && File.Exists("GFS.data");
@@ -15,10 +20,49 @@ public class FileSystemManager
     public void CreateFilesystem(int maxSize, int sectorSize)
     {
         root = new FileSystemNode("/", "", true);
+        this.maxSize = maxSize;
+        this.sectorSize = sectorSize;
         InitTestData();
-        var fs = SerializeFs();
-        Console.WriteLine(fs);
-        DeserializeFs(fs);
+        WriteMetadata();
+        CreateFilesystemDataFile();
+    }
+
+    private void CreateFilesystemDataFile()
+    {
+        try
+        {
+            using (var stream = File.Open(DATA_FILEPATH, FileMode.Append))
+            {
+                stream.SetLength(maxSize * 1024);
+            }
+            Console.WriteLine("File system created.");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error creating data file: " + e.Message);
+        }
+    }
+
+    public void WriteMetadata()
+    {
+        var data = SerializeFs();
+        try
+        {
+            using (var writer = new StreamWriter(METADATA_FILEPATH))
+            {
+                writer.Write(data);
+            }
+
+            Console.WriteLine("Metadata written successfully.");
+        }
+        catch (IOException ex)
+        {
+            Console.Error.WriteLine("Error writing metadata: " + ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Console.Error.WriteLine("Permission error: " + ex.Message);
+        }
     }
 
     private void InitTestData()
@@ -31,7 +75,7 @@ public class FileSystemManager
         var sub2 = new FileSystemNode("/", "sub2", true);
         sub2.Children.AddLast(new FileSystemNode("/sub2/", "file4", false));
         var sub3 = new FileSystemNode("/sub2/", "sub3", true);
-        sub3.Children.AddLast(new FileSystemNode("/sub2/sub3/","file5",false));
+        sub3.Children.AddLast(new FileSystemNode("/sub2/sub3/", "file5", false));
         sub2.Children.AddLast(sub3);
         root.Children.AddLast(sub2);
     }
@@ -56,6 +100,7 @@ public class FileSystemManager
             var split = StringHelper.Split(line, ' ');
             createNode(split[0], split[1], bool.Parse(split[2]));
         }
+
         Console.WriteLine("Deserialized FS:");
         Console.WriteLine(SerializeFs());
         return true;
@@ -81,6 +126,7 @@ public class FileSystemManager
         {
             return false;
         }
+
         dir.Children.AddLast(new FileSystemNode(filePath, name, isDirectory));
         return true;
     }
