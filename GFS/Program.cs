@@ -1,4 +1,5 @@
-﻿using GFS.helper;
+﻿using System.Text;
+using GFS.helper;
 
 namespace GFS;
 
@@ -72,11 +73,56 @@ public class Program
                 }
 
                 return CreateCommand(command, fileSystemManager);
+            case "help":
+                Console.WriteLine(Messages.HelpCommand);
+                return true;
+            case "mkdir":
+                return MkdirCommand(command, fileSystemManager);
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
         }
+    }
 
+    private static bool MkdirCommand(string[] command, FileSystemManager fileSystemManager)
+    {
+        if (command.Length < 2)
+        {
+            Console.Error.WriteLine(Messages.InvalidArgumentList);
+            return false;
+        }
+
+        for (int i = 1; i < command.Length; i++)
+        {
+            string dirName = command[i];
+            string parentPath = fileSystemManager.CurrentPath;
+            if (StringHelper.isPath(dirName))
+            {
+                if (fileSystemManager.DirExists(dirName))
+                {
+                    Console.Error.WriteLine(Messages.DirExists);
+                    return false;
+                }
+                var splitPath = StringHelper.Split(dirName, '/');
+                parentPath = "/" + StringHelper.Join(splitPath, "/", 0, splitPath.Length - 2);
+                dirName = splitPath[splitPath.Length - 1];
+
+                if (!fileSystemManager.DirExists(parentPath))
+                {
+                    Console.Error.WriteLine(Messages.DirectoryDoesNotExist);
+                    return false;
+                }
+            }
+
+            if (!StringHelper.isValidNodeName(dirName))
+            {
+                Console.Error.WriteLine(Messages.InvalidDirName);
+                return false;
+            }
+            fileSystemManager.Mkdir(parentPath, dirName);
+        }
+
+        return true;
     }
 
     private static bool CreateCommand(string[] command, FileSystemManager fileSystemManager)
@@ -119,6 +165,7 @@ public class Program
             Console.Error.WriteLine(Messages.Atleast16Sectors);
             return false;
         }
+
         fileSystemManager.CreateFilesystem(maxSize, sectorSize);
         return true;
     }

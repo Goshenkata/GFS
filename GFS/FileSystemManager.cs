@@ -5,12 +5,12 @@ namespace GFS;
 
 public class FileSystemManager
 {
-    private bool b;
     private FileSystemNode root;
     public static string METADATA_FILEPATH = "GFS.meta";
     public static string DATA_FILEPATH = "GFS.data";
-    private int sectorSize;
-    private int maxSize;
+    private int _sectorSize;
+    private int _maxSize;
+    public string CurrentPath { get; } = "/";
 
     public bool IsInit()
     {
@@ -20,8 +20,8 @@ public class FileSystemManager
     public void CreateFilesystem(int maxSize, int sectorSize)
     {
         root = new FileSystemNode("/", "", true);
-        this.maxSize = maxSize;
-        this.sectorSize = sectorSize;
+        this._maxSize = maxSize;
+        this._sectorSize = sectorSize;
         InitTestData();
         WriteMetadata();
         CreateFilesystemDataFile();
@@ -33,7 +33,7 @@ public class FileSystemManager
         {
             using (var stream = File.Open(DATA_FILEPATH, FileMode.Append))
             {
-                stream.SetLength(maxSize * 1024);
+                stream.SetLength(_maxSize * 1024);
             }
 
             Console.WriteLine(Messages.FilesystemCreated);
@@ -81,7 +81,7 @@ public class FileSystemManager
 
     private string SerializeFs()
     {
-        var output = new MyStringBuilder($"{sectorSize} {maxSize}\n");
+        var output = new MyStringBuilder($"{_sectorSize} {_maxSize}\n");
         foreach (var fileSystemNode in root.Children)
         {
             output.Append(fileSystemNode.Serialize());
@@ -94,8 +94,8 @@ public class FileSystemManager
         root = new FileSystemNode("/", "", true);
         var lines = StringHelper.Split(serializedFS, '\n');
         var fsSizeMetadata = StringHelper.Split(lines[0], ' ');
-        this.sectorSize = int.Parse(fsSizeMetadata[0]);
-        this.maxSize = int.Parse(fsSizeMetadata[1]);
+        this._sectorSize = int.Parse(fsSizeMetadata[0]);
+        this._maxSize = int.Parse(fsSizeMetadata[1]);
         for (var index = 1; index < lines.Length; index++)
         {
             var line = lines[index];
@@ -143,5 +143,21 @@ public class FileSystemManager
         {
             Console.WriteLine();
         }
+    }
+
+    public bool Mkdir(string path, string name)
+    {
+        var node = getNodeByPath(path);
+        if (node == null)
+            return false;
+        node.Children.AddLast(new FileSystemNode(path, name, true));
+        WriteMetadata();
+        return true;
+    }
+
+    public bool DirExists(string path)
+    {
+        var node = getNodeByPath(path);
+        return node != null && node.IsDirectory;
     }
 }
