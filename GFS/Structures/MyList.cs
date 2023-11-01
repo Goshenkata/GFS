@@ -9,11 +9,17 @@ public class MyList<T> : IEnumerable<T>
     private int count;
     public int Count => count;
 
+    public T this[int indx]
+    {
+        get => GetAt(indx);
+        set => SetAt(indx, value);
+    }
+
     private Node<T> GetNodeAt(int index)
     {
         if (index < 0 && index >= count)
         {
-            throw new NotImplementedException();
+            throw new IndexOutOfRangeException();
         }
 
         var current = head;
@@ -178,6 +184,7 @@ public class MyList<T> : IEnumerable<T>
             current = current.Next;
             i++;
         }
+
         return array;
     }
 

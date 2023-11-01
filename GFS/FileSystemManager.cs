@@ -68,10 +68,6 @@ public class FileSystemManager
         }
     }
 
-    public bool DirExists(string path)
-    {
-        return fsData.DirExists(path);
-    }
 
     public void Mkdir(string parentPath, string dirName)
     {
@@ -83,4 +79,13 @@ public class FileSystemManager
         fsData.PrintTree();
     }
 
+    public bool DirExists(string dirName)
+    {
+        return fsData.DirExists(dirName);
+    }
+
+    public void Rmdir(string parentPath, string dirName)
+    {
+        fsData.Rmdir(parentPath, dirName);
+    }
 }

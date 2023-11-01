@@ -92,4 +92,42 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
             child.PrintTree(level + 1);
         }
     }
+
+    public bool Equals(FileSystemNode x, FileSystemNode y)
+    {
+        if (x == null && y == null)
+            return true;
+
+        if (x == null || y == null)
+            return false;
+
+        return x.Name == y.Name && x.IsDirectory == y.IsDirectory && x.Path == y.Path;
+    }
+
+    public int GetHashCode(FileSystemNode obj)
+    {
+        if (obj == null)
+            return 0;
+
+        int hashName = obj.Name == null ? 0 : obj.Name.GetHashCode();
+        int hashIsDirectory = obj.IsDirectory.GetHashCode();
+        int hashPath = obj.Path == null ? 0 : obj.Path.GetHashCode();
+
+        return hashName ^ hashIsDirectory ^ hashPath;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null || GetType() != obj.GetType())
+        {
+            return false;
+        }
+
+        FileSystemNode b = (FileSystemNode)obj;
+
+        // Compare the individual properties
+        return Name == b.Name &&
+               IsDirectory == b.IsDirectory &&
+               Path == b.Path;
+    }
 }

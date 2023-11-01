@@ -1,4 +1,5 @@
-﻿using GFS.helper;
+﻿using GFS.enums;
+using GFS.helper;
 
 namespace GFS;
 
@@ -52,6 +53,7 @@ public class Program
             {
                 fileSystemManager.LoadFs();
             }
+
             ProcessInput(args, fileSystemManager);
             if (!fileSystemManager.IsInit())
             {
@@ -80,17 +82,19 @@ public class Program
                 Console.WriteLine(Messages.HelpCommand);
                 return true;
             case "mkdir":
-                return MkdirCommand(command, fileSystemManager);
+                return directoryCommand(command, fileSystemManager, DirectoryCommand.MKDIR);
             case "tree":
                 fileSystemManager.PrintTree();
                 return true;
+            case "rmdir":
+                return directoryCommand(command, fileSystemManager, DirectoryCommand.RMDIR);
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
         }
     }
 
-    private static bool MkdirCommand(string[] command, FileSystemManager fileSystemManager)
+    private static bool directoryCommand(string[] command, FileSystemManager fileSystemManager, DirectoryCommand directoryCommand)
     {
         if (command.Length < 2)
         {
@@ -109,6 +113,7 @@ public class Program
                     Console.Error.WriteLine(Messages.DirExists);
                     return false;
                 }
+
                 var splitPath = StringHelper.Split(dirName, '/');
                 parentPath = "/" + StringHelper.Join(splitPath, "/", 0, splitPath.Length - 2);
                 dirName = splitPath[splitPath.Length - 1];
@@ -125,7 +130,21 @@ public class Program
                 Console.Error.WriteLine(Messages.InvalidDirName);
                 return false;
             }
-            fileSystemManager.Mkdir(parentPath, dirName);
+
+            switch (directoryCommand)
+            {
+                case DirectoryCommand.MKDIR:
+                    fileSystemManager.Mkdir(parentPath, dirName);
+                    break;
+                case DirectoryCommand.RMDIR:
+                    fileSystemManager.Rmdir(parentPath, dirName);
+                    break;
+                case DirectoryCommand.CD:
+                    throw new NotImplementedException();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(directoryCommand), directoryCommand, null);
+            }
         }
 
         return true;
@@ -175,6 +194,7 @@ public class Program
         //turn kb to bytes;
         maxSize *= 1024;
         sectorSize *= 1024;
+        //todo remove, just for testing
         maxSize = 10000;
         fileSystemManager.CreateFilesystem(maxSize, sectorSize);
         return true;

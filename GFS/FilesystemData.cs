@@ -126,4 +126,19 @@ public class FilesystemData
     {
         root.PrintTree();
     }
+
+    public bool Rmdir(string parentPath, string dirName)
+    {
+        var parent = getNodeByPath(parentPath);
+        if (parent == null)
+            return false;
+        for (var i = 0; i < parent.Children.Count; i++)
+        {
+            if (parent.Children[i].Name == dirName) {
+                parent.Children.RemoveAt(i);
+            }
+        }
+        WriteMetadata();
+        return true;
+    }
 }
