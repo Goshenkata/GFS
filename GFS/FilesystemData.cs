@@ -19,7 +19,7 @@ public class FilesystemData
         _fs.Seek(dataStart, SeekOrigin.Begin);
         _bw = bw;
         _br = br;
-        root = new FileSystemNode("/", "", true);
+        root = new FileSystemNode("/", "root", true);
         this.dataStart = dataStart;
         this.dataEnd = dataEnd;
     }
@@ -45,6 +45,7 @@ public class FilesystemData
         _fs.Seek(dataStart, SeekOrigin.Begin);
         //todo replace with my own methods
         _bw.Write(data);
+        _bw.Flush();
     }
 
     private string SerializeFs()
@@ -61,11 +62,9 @@ public class FilesystemData
 
     private bool DeserializeFs(string serializedFS)
     {
-        root = new FileSystemNode("/", "", true);
+        root = new FileSystemNode("/", "root", true);
         var lines = StringHelper.Split(serializedFS, '\n');
-        var fsSizeMetadata = StringHelper.Split(lines[0], ' ');
-
-        for (var index = 1; index < lines.Length; index++)
+        for (var index = 0; index < lines.Length; index++)
         {
             var line = lines[index];
             var split = StringHelper.Split(line, ' ');
@@ -121,5 +120,10 @@ public class FilesystemData
         _fs.Seek(dataStart, SeekOrigin.Begin);
         var deserialized = _br.ReadString();
         DeserializeFs(deserialized);
+    }
+
+    public void PrintTree()
+    {
+        root.PrintTree();
     }
 }

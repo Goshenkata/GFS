@@ -48,6 +48,10 @@ public class Program
         //else use args
         else
         {
+            if (fileSystemManager.IsInit())
+            {
+                fileSystemManager.LoadFs();
+            }
             ProcessInput(args, fileSystemManager);
             if (!fileSystemManager.IsInit())
             {
@@ -77,6 +81,9 @@ public class Program
                 return true;
             case "mkdir":
                 return MkdirCommand(command, fileSystemManager);
+            case "tree":
+                fileSystemManager.PrintTree();
+                return true;
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;

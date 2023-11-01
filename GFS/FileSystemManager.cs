@@ -50,7 +50,7 @@ public class FileSystemManager
     {
         try
         {
-            _fs = File.Open(DATA_FILEPATH, FileMode.Open, FileAccess.ReadWrite);
+            _fs = File.Open(DATA_FILEPATH, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             _bw = new BinaryWriter(_fs);
             _br = new BinaryReader(_fs);
 
@@ -61,7 +61,6 @@ public class FileSystemManager
             long sectorOffset = _maxFsSizeInBytes / 10;
             fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
             fsData.LoadFs();
-            Console.WriteLine(Messages.FilesystemLoadedSuccessfully);
         }
         catch (Exception e)
         {
@@ -78,4 +77,10 @@ public class FileSystemManager
     {
         fsData.Mkdir(parentPath, dirName);
     }
+
+    public void PrintTree()
+    {
+        fsData.PrintTree();
+    }
+
 }

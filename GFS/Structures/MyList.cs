@@ -185,6 +185,22 @@ public class MyList<T> : IEnumerable<T>
     {
         return Count == 0;
     }
+
+    public void RemoveLast()
+    {
+        var newTail = this.tail.Prev;
+        tail.Prev = null;
+        tail = newTail;
+        count--;
+    }
+
+    public void RemoveFirst()
+    {
+        var newHead = this.head.Next;
+        head.Next = null;
+        head = newHead;
+        count--;
+    }
 }
 
 internal class Node<T>

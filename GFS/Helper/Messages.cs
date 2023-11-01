@@ -23,7 +23,8 @@ public static class Messages
     public const string HelpCommand = @"Gosho File System list of commands, the * symbol denotes an optional paramether: 
 
 > create {sectorSize}* {sectorSizeUnit}* {maxFilesystemSizeKb}*          Creates the file system if it does not exist
-> mkdir {dirName}                                                        Creates a directory";
+> mkdir {dirName}                                                        Creates a directory
+> tree                                                                   Prints the entire file tree";
 
     public const string DirectoryDoesNotExist = "Directory does not exists";
     public const string DirExists = "Directory already exists";

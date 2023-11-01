@@ -18,7 +18,7 @@ public class CharHelper
     
     public static bool isDigit(char c)
     {
-        return c is >= '0' and <= '0';
+        return c is >= '0' and <= '9';
     }
 
     public static bool isLetterOrDigit(char c)
