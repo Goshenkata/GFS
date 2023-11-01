@@ -25,7 +25,7 @@ public class MyStringBuilder
     {
         if (requiredLength > buffer.Length)
         {
-            char[] newArr = new char[MyMath.Max(buffer.Length * 2, requiredLength)];
+            char[] newArr = new char[Math.Max(buffer.Length * 2, requiredLength)];
             for (var i = 0; i < buffer.Length; i++)
             {
                 newArr[i] = buffer[i];

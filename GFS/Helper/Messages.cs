@@ -4,8 +4,8 @@ public static class Messages
 {
     public const string InvalidCommand = "Invalid command, type help for a list of available commands.";
     public const string EnteringInteractiveMode = "Entering interactive mode...";
-    public const string EnterMaxFSSize = "Enter the maximum filesystem size in format {number unit} (default 1 GB): ";
-    public const string EnterSectorSize = "Enter the sector size in KB (default 64KB): ";
+    public const string EnterMaxFSSize = "Enter the maximum filesystem size in format {number unit} (default 10 GB): ";
+    public const string EnterSectorSize = "Enter the sector size in KB (default 32KB): ";
     public const string FilesystemNotFound = "Filesystem not found.";
 
     public const string FilesystemNotFoundHelp =

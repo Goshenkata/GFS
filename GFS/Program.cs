@@ -1,5 +1,4 @@
-﻿using System.Text;
-using GFS.helper;
+﻿using GFS.helper;
 
 namespace GFS;
 
@@ -69,7 +68,7 @@ public class Program
             case "create":
                 if (command.Length == 1)
                 {
-                    command = new[] { "create", "1", "GB", "64" };
+                    command = new[] { "create", "10", "GB", "32" };
                 }
 
                 return CreateCommand(command, fileSystemManager);
@@ -139,7 +138,7 @@ public class Program
             return false;
         }
 
-        bool isValid = int.TryParse(command[1], out int maxSize);
+        bool isValid = long.TryParse(command[1], out long maxSize);
         command[2] = StringHelper.ToLowerCase(command[2]);
         isValid = isValid && (command[2] == "kb" || command[2] == "mb" || command[2] == "gb");
         switch (command[2])
@@ -166,6 +165,10 @@ public class Program
             return false;
         }
 
+        //turn kb to bytes;
+        maxSize *= 1024;
+        sectorSize *= 1024;
+        maxSize = 10000;
         fileSystemManager.CreateFilesystem(maxSize, sectorSize);
         return true;
     }
