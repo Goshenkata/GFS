@@ -11,7 +11,7 @@ public static class Messages
     public const string FilesystemNotFoundHelp =
         "File system not found please create one using GFS create {max size} {sector size}";
 
-    public const string Prompt = "GFS: ";
+    public const string Prompt = "GFS [{0}]: ";
 
     public const string ErrorCreatingFileSystem =
         "Invalid input, please use GFS create {max size} {sector size in KB}, for example: GFS create 1 GB 16";

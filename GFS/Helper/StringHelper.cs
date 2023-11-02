@@ -156,4 +156,10 @@ public class StringHelper
 
         return true;
     }
+
+    public static string GetParentPath(string path)
+    {
+        var splitPath = StringHelper.Split(path, '/');
+        return "/" + StringHelper.Join(splitPath, "/", 0, splitPath.Length - 2);
+    }
 }

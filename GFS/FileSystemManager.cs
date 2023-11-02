@@ -7,7 +7,13 @@ namespace GFS;
 public class FileSystemManager
 {
     public static string DATA_FILEPATH = "GFS.data";
-    public string CurrentPath { get; } = "/";
+
+    private string _currentPath = "/";
+    public string CurrentPath
+    {
+        get => _currentPath;
+        set => _currentPath = value;
+    }
 
     private FilesystemData fsData;
 

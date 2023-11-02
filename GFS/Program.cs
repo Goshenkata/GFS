@@ -36,13 +36,13 @@ public class Program
                 fileSystemManager.LoadFs();
             }
 
-            Console.Write(Messages.Prompt);
+            Console.Write(Messages.Prompt, fileSystemManager.CurrentPath);
             var input = Console.ReadLine();
             while (input != "exit")
             {
                 var command = StringHelper.SplitCommand(input);
                 ProcessInput(command, fileSystemManager);
-                Console.Write(Messages.Prompt);
+                Console.Write(Messages.Prompt, fileSystemManager.CurrentPath);
                 input = Console.ReadLine();
             }
         }
@@ -82,20 +82,21 @@ public class Program
                 Console.WriteLine(Messages.HelpCommand);
                 return true;
             case "mkdir":
-                return directoryCommand(command, fileSystemManager, DirectoryCommand.MKDIR);
+                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.MKDIR);
             case "tree":
                 fileSystemManager.PrintTree();
                 return true;
             case "rmdir":
-                return directoryCommand(command, fileSystemManager, DirectoryCommand.RMDIR);
-            
+                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.RMDIR);
+            case "cd":
+                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.CD);
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
         }
     }
 
-    private static bool directoryCommand(string[] command, FileSystemManager fileSystemManager,
+    private static bool DirectoryCommand(string[] command, FileSystemManager fileSystemManager,
         DirectoryCommand directoryCommand)
     {
         if (command.Length < 2)
@@ -108,6 +109,18 @@ public class Program
         {
             string dirName = command[i];
             string parentPath = fileSystemManager.CurrentPath;
+
+            if (dirName == "/")
+            {
+                if (directoryCommand == enums.DirectoryCommand.CD)
+                {
+                    fileSystemManager.CurrentPath = "/";
+                    return true;
+                }
+
+                return false;
+            }
+
             if (StringHelper.isPath(dirName))
             {
                 var splitPath = StringHelper.Split(dirName, '/');
@@ -121,34 +134,44 @@ public class Program
                 }
             }
 
-            if (!StringHelper.isValidNodeName(dirName))
-            {
-                Console.Error.WriteLine(Messages.InvalidDirName);
-                return false;
-            }
-
             switch (directoryCommand)
             {
-                case DirectoryCommand.MKDIR:
+                case enums.DirectoryCommand.MKDIR:
+
+                    if (!StringHelper.isValidNodeName(dirName))
+                    {
+                        Console.Error.WriteLine(Messages.InvalidDirName);
+                        return false;
+                    }
+
                     //cannot create a directory taht already exists
-                    if (fileSystemManager.DirExists(dirName))
+                    if (fileSystemManager.DirExists(parentPath + dirName))
                     {
                         Console.Error.WriteLine(Messages.DirExists);
                         return false;
                     }
 
+                    fileSystemManager.Mkdir(parentPath, dirName);
                     break;
-                case DirectoryCommand.RMDIR:
+                case enums.DirectoryCommand.RMDIR:
 
-                    if (!fileSystemManager.DirExists(dirName))
+                    if (!fileSystemManager.DirExists(parentPath + dirName))
                     {
                         Console.Error.WriteLine(Messages.DirectoryDoesNotExist);
                         return false;
                     }
+
                     fileSystemManager.Rmdir(parentPath, dirName);
                     break;
-                case DirectoryCommand.CD:
-                    throw new NotImplementedException();
+                case enums.DirectoryCommand.CD:
+                    var fullPath = dirName == ".." ? StringHelper.GetParentPath(parentPath) : parentPath + dirName + "/";
+                    if (!fileSystemManager.DirExists(fullPath))
+                    {
+                        Console.Error.WriteLine(Messages.DirectoryDoesNotExist);
+                        return false;
+                    }
+
+                    fileSystemManager.CurrentPath = fullPath;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(directoryCommand), directoryCommand, null);
