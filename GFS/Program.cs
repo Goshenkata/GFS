@@ -88,13 +88,15 @@ public class Program
                 return true;
             case "rmdir":
                 return directoryCommand(command, fileSystemManager, DirectoryCommand.RMDIR);
+            
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
         }
     }
 
-    private static bool directoryCommand(string[] command, FileSystemManager fileSystemManager, DirectoryCommand directoryCommand)
+    private static bool directoryCommand(string[] command, FileSystemManager fileSystemManager,
+        DirectoryCommand directoryCommand)
     {
         if (command.Length < 2)
         {
@@ -108,12 +110,6 @@ public class Program
             string parentPath = fileSystemManager.CurrentPath;
             if (StringHelper.isPath(dirName))
             {
-                if (fileSystemManager.DirExists(dirName))
-                {
-                    Console.Error.WriteLine(Messages.DirExists);
-                    return false;
-                }
-
                 var splitPath = StringHelper.Split(dirName, '/');
                 parentPath = "/" + StringHelper.Join(splitPath, "/", 0, splitPath.Length - 2);
                 dirName = splitPath[splitPath.Length - 1];
@@ -134,9 +130,21 @@ public class Program
             switch (directoryCommand)
             {
                 case DirectoryCommand.MKDIR:
-                    fileSystemManager.Mkdir(parentPath, dirName);
+                    //cannot create a directory taht already exists
+                    if (fileSystemManager.DirExists(dirName))
+                    {
+                        Console.Error.WriteLine(Messages.DirExists);
+                        return false;
+                    }
+
                     break;
                 case DirectoryCommand.RMDIR:
+
+                    if (!fileSystemManager.DirExists(dirName))
+                    {
+                        Console.Error.WriteLine(Messages.DirectoryDoesNotExist);
+                        return false;
+                    }
                     fileSystemManager.Rmdir(parentPath, dirName);
                     break;
                 case DirectoryCommand.CD:

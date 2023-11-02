@@ -134,7 +134,13 @@ public class FilesystemData
             return false;
         for (var i = 0; i < parent.Children.Count; i++)
         {
-            if (parent.Children[i].Name == dirName) {
+            var current = parent.Children[i];
+            if (current.Name == dirName) {
+                if (!current.Children.isEmpty())
+                {
+                    Console.Error.WriteLine(Messages.DirectoryIsNotEmpty);
+                    return false;
+                }
                 parent.Children.RemoveAt(i);
             }
         }

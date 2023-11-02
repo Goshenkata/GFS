@@ -48,24 +48,17 @@ public class FileSystemManager
 
     public void LoadFs()
     {
-        try
-        {
-            _fs = File.Open(DATA_FILEPATH, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            _bw = new BinaryWriter(_fs);
-            _br = new BinaryReader(_fs);
+        _fs = File.Open(DATA_FILEPATH, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        _bw = new BinaryWriter(_fs);
+        _br = new BinaryReader(_fs);
 
-            _fs.Seek(0, SeekOrigin.Begin);
-            _maxFsSizeInBytes = _br.ReadInt64();
-            _sectorSizeInBytes = _br.ReadInt32();
-            long fsDataOffset = sizeof(long) + sizeof(int);
-            long sectorOffset = _maxFsSizeInBytes / 10;
-            fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
-            fsData.LoadFs();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
+        _fs.Seek(0, SeekOrigin.Begin);
+        _maxFsSizeInBytes = _br.ReadInt64();
+        _sectorSizeInBytes = _br.ReadInt32();
+        long fsDataOffset = sizeof(long) + sizeof(int);
+        long sectorOffset = _maxFsSizeInBytes / 10;
+        fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
+        fsData.LoadFs();
     }
 
 
