@@ -64,7 +64,7 @@ public class StringHelper
         {
             if (c == seperator)
             {
-                if (!metSeperator && !accumulator.isEmpty())
+                if (!metSeperator && !accumulator.IsEmpty())
                 {
                     output.AddLast(accumulator.ToString());
                     accumulator.Clear();
@@ -78,7 +78,7 @@ public class StringHelper
             }
         }
 
-        if (!accumulator.isEmpty())
+        if (!accumulator.IsEmpty())
         {
             output.AddLast(accumulator.ToString());
         }
@@ -86,7 +86,7 @@ public class StringHelper
         return output.GetArray();
     }
 
-    public static bool isPath(string name)
+    public static bool IsPath(string name)
     {
         return name != null && name[0] == '/';
     }
@@ -136,7 +136,7 @@ public class StringHelper
         return sb.ToString();
     }
 
-    public static bool isValidNodeName(string nodeName)
+    public static bool IsValidNodeName(string nodeName)
     {
         //starts with letterOrDigit
         if (!CharHelper.isLetterOrDigit(nodeName[0]))

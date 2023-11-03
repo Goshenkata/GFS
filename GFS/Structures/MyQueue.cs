@@ -1,30 +1,28 @@
-using GFS.Structures;
-
-namespace GFS.helper;
+namespace GFS.Structures;
 
 public class MyQueue<T>
 {
-    private MyList<T> list = new MyList<T>();
+    private MyList<T> _list = new MyList<T>();
 
     public void Enqueue(T data)
     {
-        list.AddLast(data);
+        _list.AddLast(data);
     }
     
     public T Dequeue()
     {
-        var output = list.GetFirst();
-        list.RemoveFirst();
+        var output = _list.GetFirst();
+        _list.RemoveFirst();
         return output;
     }
 
     public T Peek()
     {
-        return list.GetFirst();
+        return _list.GetFirst();
     }
 
-    public bool isEmpty()
+    public bool IsEmpty()
     {
-        return list.isEmpty();
+        return _list.isEmpty();
     }
 }

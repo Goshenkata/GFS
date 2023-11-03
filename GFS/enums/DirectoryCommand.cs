@@ -2,6 +2,6 @@ namespace GFS.enums;
 
 enum DirectoryCommand
 {
-    MKDIR, RMDIR, CD, LS
+    Mkdir, Rmdir, Cd, Ls
     
 }

@@ -1,12 +1,9 @@
-using GFS.helper;
-
 namespace GFS.Structures;
 
 public class MyStringBuilder
 {
-    private char[] buffer = new char[16];
-    private int length = 0;
-    public int Length => length;
+    private char[] _buffer = new char[16];
+    public int Length { get; private set; }
 
     public MyStringBuilder(string initialString)
     {
@@ -16,44 +13,44 @@ public class MyStringBuilder
     public MyStringBuilder() { }
     public void Append(char c)
     {
-        CheckCapacity(length + 1);
-        buffer[length] = c;
-        length++;
+        CheckCapacity(Length + 1);
+        _buffer[Length] = c;
+        Length++;
     }
 
     private void CheckCapacity(int requiredLength)
     {
-        if (requiredLength > buffer.Length)
+        if (requiredLength > _buffer.Length)
         {
-            char[] newArr = new char[Math.Max(buffer.Length * 2, requiredLength)];
-            for (var i = 0; i < buffer.Length; i++)
+            char[] newArr = new char[Math.Max(_buffer.Length * 2, requiredLength)];
+            for (var i = 0; i < _buffer.Length; i++)
             {
-                newArr[i] = buffer[i];
+                newArr[i] = _buffer[i];
             }
 
-            buffer = newArr;
+            _buffer = newArr;
         }
     }
 
     public override string ToString()
     {
-        return new string(buffer, 0, length);
+        return new string(_buffer, 0, Length);
     }
 
     public void Clear()
     {
-        length = 0;
-        buffer = new char[16];
+        Length = 0;
+        _buffer = new char[16];
     }
 
     public void Append(string s)
     {
-        CheckCapacity(length + s.Length);
+        CheckCapacity(Length + s.Length);
         for (var i = 0; i < s.Length; i++)
         {
-            buffer[length + i] = s[i];
+            _buffer[Length + i] = s[i];
         }
-        length += s.Length;
+        Length += s.Length;
     }
 
     public void Append(int n)
@@ -61,8 +58,8 @@ public class MyStringBuilder
         Append((char) (n + 32));
     }
 
-    public bool isEmpty()
+    public bool IsEmpty()
     {
-        return length == 0;
+        return Length == 0;
     }
 }

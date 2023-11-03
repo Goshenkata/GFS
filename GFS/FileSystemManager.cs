@@ -1,12 +1,8 @@
-using System.Reflection.Metadata.Ecma335;
-using GFS.helper;
-using GFS.Structures;
-
 namespace GFS;
 
 public class FileSystemManager
 {
-    public static string DATA_FILEPATH = "GFS.data";
+    public const string DataFilepath = "GFS.data";
 
     private string _currentPath = "/";
     public string CurrentPath
@@ -26,7 +22,7 @@ public class FileSystemManager
 
     public bool IsInit()
     {
-        return File.Exists(DATA_FILEPATH);
+        return File.Exists(DataFilepath);
     }
 
     public void CreateFilesystem(long maxSize, int sectorSize)
@@ -37,7 +33,7 @@ public class FileSystemManager
         long fsDataOffset = sizeof(long) + sizeof(int);
 
         //write and read maxFsSizeInBytes and sectorSize, init length;
-        _fs = File.Open(DATA_FILEPATH, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        _fs = File.Open(DataFilepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
         _bw = new BinaryWriter(_fs);
         _br = new BinaryReader(_fs);
         _fs.SetLength(_maxFsSizeInBytes);
@@ -54,7 +50,7 @@ public class FileSystemManager
 
     public void LoadFs()
     {
-        _fs = File.Open(DATA_FILEPATH, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        _fs = File.Open(DataFilepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
         _bw = new BinaryWriter(_fs);
         _br = new BinaryReader(_fs);
 
@@ -90,7 +86,7 @@ public class FileSystemManager
 
     public void Ls(string path)
     {
-        var currentDir= fsData.getNodeByPath(path);
+        var currentDir= fsData.GetNodeByPath(path);
         foreach (var child in currentDir.Children)
         {
             Console.WriteLine(child.getLsFormat());

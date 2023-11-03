@@ -82,14 +82,14 @@ public class Program
                 Console.WriteLine(Messages.HelpCommand);
                 return true;
             case "mkdir":
-                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.MKDIR);
+                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.Mkdir);
             case "tree":
                 fileSystemManager.PrintTree();
                 return true;
             case "rmdir":
-                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.RMDIR);
+                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.Rmdir);
             case "cd":
-                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.CD);
+                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.Cd);
             case "ls":
                 if (command.Length == 1)
                 {
@@ -103,7 +103,7 @@ public class Program
                     return true;
                 }
 
-                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.LS);
+                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.Ls);
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
@@ -115,7 +115,7 @@ public class Program
     {
         if (command.Length < 2)
         {
-            if (directoryCommand != enums.DirectoryCommand.LS)
+            if (directoryCommand != enums.DirectoryCommand.Ls)
             {
                 Console.Error.WriteLine(Messages.InvalidArgumentList);
                 return false;
@@ -129,17 +129,17 @@ public class Program
 
             if (dirName == "/")
             {
-                if (directoryCommand == enums.DirectoryCommand.CD)
+                if (directoryCommand == enums.DirectoryCommand.Cd)
                 {
                     fileSystemManager.CurrentPath = "/";
                     return true;
                 }
 
-                if (directoryCommand != enums.DirectoryCommand.LS)
+                if (directoryCommand != enums.DirectoryCommand.Ls)
                     return false;
             }
 
-            if (StringHelper.isPath(dirName))
+            if (StringHelper.IsPath(dirName))
             {
                 var splitPath = StringHelper.Split(dirName, '/');
                 parentPath = "/" + StringHelper.Join(splitPath, "/", 0, splitPath.Length - 2);
@@ -154,9 +154,9 @@ public class Program
 
             switch (directoryCommand)
             {
-                case enums.DirectoryCommand.MKDIR:
+                case enums.DirectoryCommand.Mkdir:
 
-                    if (!StringHelper.isValidNodeName(dirName))
+                    if (!StringHelper.IsValidNodeName(dirName))
                     {
                         Console.Error.WriteLine(Messages.InvalidDirName);
                         return false;
@@ -171,7 +171,7 @@ public class Program
 
                     fileSystemManager.Mkdir(parentPath, dirName);
                     break;
-                case enums.DirectoryCommand.RMDIR:
+                case enums.DirectoryCommand.Rmdir:
 
                     if (!fileSystemManager.DirExists(parentPath + dirName))
                     {
@@ -181,7 +181,7 @@ public class Program
 
                     fileSystemManager.Rmdir(parentPath, dirName);
                     break;
-                case enums.DirectoryCommand.CD:
+                case enums.DirectoryCommand.Cd:
                     var fullPath = dirName == ".."
                         ? StringHelper.GetParentPath(parentPath)
                         : parentPath + dirName + "/";
@@ -193,7 +193,7 @@ public class Program
 
                     fileSystemManager.CurrentPath = fullPath;
                     break;
-                case enums.DirectoryCommand.LS:
+                case enums.DirectoryCommand.Ls:
                     var dirPath = dirName == ".." ? StringHelper.GetParentPath(parentPath) : parentPath + dirName + "/";
                     if (!fileSystemManager.DirExists(dirPath))
                     {

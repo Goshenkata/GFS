@@ -61,7 +61,7 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
     {
         MyQueue<FileSystemNode> queue = new MyQueue<FileSystemNode>();
         queue.Enqueue(this);
-        while (!queue.isEmpty())
+        while (!queue.IsEmpty())
         {
             var current = queue.Dequeue();
             yield return current;
