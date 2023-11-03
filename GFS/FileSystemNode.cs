@@ -76,6 +76,12 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
     {
         return $"{Path} {Name} {IsDirectory}";
     }
+    
+    public string getLsFormat()
+    {
+        var type = IsDirectory ? "D" : "F";
+        return $"{Name} :{type}";
+    }
 
     IEnumerator IEnumerable.GetEnumerator()
     {

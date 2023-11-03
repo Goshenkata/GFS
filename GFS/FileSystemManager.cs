@@ -87,4 +87,13 @@ public class FileSystemManager
     {
         fsData.Rmdir(parentPath, dirName);
     }
+
+    public void Ls(string path)
+    {
+        var currentDir= fsData.getNodeByPath(path);
+        foreach (var child in currentDir.Children)
+        {
+            Console.WriteLine(child.getLsFormat());
+        }
+    }
 }

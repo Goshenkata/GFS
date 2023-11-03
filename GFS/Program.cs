@@ -90,6 +90,20 @@ public class Program
                 return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.RMDIR);
             case "cd":
                 return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.CD);
+            case "ls":
+                if (command.Length == 1)
+                {
+                    fileSystemManager.Ls(fileSystemManager.CurrentPath);
+                    return true;
+                }
+
+                if (command[1] == "/")
+                {
+                    fileSystemManager.Ls("/");
+                    return true;
+                }
+
+                return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.LS);
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
@@ -101,8 +115,11 @@ public class Program
     {
         if (command.Length < 2)
         {
-            Console.Error.WriteLine(Messages.InvalidArgumentList);
-            return false;
+            if (directoryCommand != enums.DirectoryCommand.LS)
+            {
+                Console.Error.WriteLine(Messages.InvalidArgumentList);
+                return false;
+            }
         }
 
         for (int i = 1; i < command.Length; i++)
@@ -118,7 +135,8 @@ public class Program
                     return true;
                 }
 
-                return false;
+                if (directoryCommand != enums.DirectoryCommand.LS)
+                    return false;
             }
 
             if (StringHelper.isPath(dirName))
@@ -164,7 +182,9 @@ public class Program
                     fileSystemManager.Rmdir(parentPath, dirName);
                     break;
                 case enums.DirectoryCommand.CD:
-                    var fullPath = dirName == ".." ? StringHelper.GetParentPath(parentPath) : parentPath + dirName + "/";
+                    var fullPath = dirName == ".."
+                        ? StringHelper.GetParentPath(parentPath)
+                        : parentPath + dirName + "/";
                     if (!fileSystemManager.DirExists(fullPath))
                     {
                         Console.Error.WriteLine(Messages.DirectoryDoesNotExist);
@@ -173,6 +193,16 @@ public class Program
 
                     fileSystemManager.CurrentPath = fullPath;
                     break;
+                case enums.DirectoryCommand.LS:
+                    var dirPath = dirName == ".." ? StringHelper.GetParentPath(parentPath) : parentPath + dirName + "/";
+                    if (!fileSystemManager.DirExists(dirPath))
+                    {
+                        Console.Error.WriteLine(Messages.DirectoryDoesNotExist);
+                        return false;
+                    }
+
+                    fileSystemManager.Ls(dirPath);
+                    return true;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(directoryCommand), directoryCommand, null);
             }
