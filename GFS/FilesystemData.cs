@@ -141,4 +141,11 @@ public class FilesystemData : StreamArray
 
     public FilesystemData(long dataStart, long dataEnd, Stream fs, BinaryWriter bw, BinaryReader br) : base(dataStart,
         dataEnd, fs, bw, br) { }
+
+    public bool FileExists(string path)
+    {
+        var node = GetNodeByPath(path);
+        return node != null && !node.IsDirectory;
+    }
+
 }

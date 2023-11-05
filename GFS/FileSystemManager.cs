@@ -1,4 +1,6 @@
 using System.Text;
+using GFS.helper;
+using GFS.Structures;
 
 namespace GFS;
 
@@ -52,7 +54,7 @@ public class FileSystemManager
 
         _sectorData = new SectorData(sectorOffset + 1, maxSize, _fs, _bw, _br, sectorSize);
         _sectorData.InitTestData();
-        int[] arr = {1};
+        int[] arr = { 1 };
         Console.WriteLine(Encoding.UTF8.GetString(_sectorData.readFile(arr)));
     }
 
@@ -88,6 +90,11 @@ public class FileSystemManager
         return _fsData.DirExists(dirName);
     }
 
+    public bool FileExists(string dirName)
+    {
+        return _fsData.FileExists(dirName);
+    }
+
     public void Rmdir(string parentPath, string dirName)
     {
         _fsData.Rmdir(parentPath, dirName);
@@ -100,5 +107,38 @@ public class FileSystemManager
         {
             Console.WriteLine(child.getLsFormat());
         }
+    }
+
+    public bool AppendToFile(string filePath, string data)
+    {
+        var node = _fsData.GetNodeByPath(filePath);
+        int[] newSectors = _sectorData.AppendToFile(Encoding.UTF8.GetBytes(data), node.SectorIds.GetLast());
+        if (newSectors.Length > 0)
+        {
+            node.SectorIds.AddLast(newSectors);
+            _fsData.WriteMetadata();
+        }
+
+        return true;
+    }
+
+    public bool CreateFile(string filePath, string data)
+    {
+        var node = _fsData.GetNodeByPath(filePath);
+        var sectors = _sectorData.WriteFile(Encoding.UTF8.GetBytes(data));
+        if (node == null)
+        {
+            string fileName;
+            string parentPath = StringHelper.GetParentPath(filePath, out fileName);
+            _fsData.CreateNode(parentPath, fileName, false, sectors);
+        }
+        else
+        {
+            var newSectorsList =  new MyList<int>();
+            newSectorsList.AddLast(sectors);
+            node.SectorIds = newSectorsList;
+        }
+        _fsData.WriteMetadata();
+        return true;
     }
 }

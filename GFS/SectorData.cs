@@ -1,3 +1,5 @@
+using GFS.helper;
+
 namespace GFS;
 
 public class SectorData : StreamArray
@@ -15,9 +17,19 @@ public class SectorData : StreamArray
         _lastSectorId = (int)Math.Floor((double)(dataEnd - dataStart) / sectorSize) - 1;
     }
 
+    private long getStartOfSectorIndex(int sectorId)
+    {
+        return _dataStart + _sectorSize * sectorId;
+    }
+
+    private long getStartOfDataIndex(int sectorId)
+    {
+        return _dataStart + sectorId * _sectorSize + (_sectorSize - _dataSize);
+    }
+
     private SectorNode GetSector(int sectorId)
     {
-        _fs.Seek(_dataStart + _sectorSize * sectorId, SeekOrigin.Begin);
+        _fs.Seek(getStartOfSectorIndex(sectorId), SeekOrigin.Begin);
         SectorNode sectorNode = new SectorNode();
         sectorNode.IsFree = _br.ReadBoolean();
         sectorNode.data = _br.ReadBytes(_dataSize);
@@ -55,11 +67,12 @@ public class SectorData : StreamArray
         return -1;
     }
 
+
     public int[] WriteFile(byte[] data)
     {
         int neededSectors = (int)Math.Ceiling((double)data.Length / _dataSize);
         int[] sectorIds = new int[neededSectors];
-        for (int i = 0; i < data.Length; i+= _dataSize)
+        for (int i = 0; i < data.Length; i += _dataSize)
         {
             int sector = TakeNextAvalableSector();
             //if there are no more available sectors, free all the sectors and return an empty array
@@ -70,10 +83,12 @@ public class SectorData : StreamArray
                 {
                     FreeSector(sectorId);
                 }
+
                 return Array.Empty<int>();
             }
+
             //go to the free data section of the array
-            _fs.Seek(_dataStart + sector * _sectorSize + (_sectorSize - _dataSize), SeekOrigin.Begin);
+            _fs.Seek(getStartOfDataIndex(sector), SeekOrigin.Begin);
             _bw.Write(data, i, Math.Min(data.Length, _dataSize));
         }
 
@@ -87,10 +102,12 @@ public class SectorData : StreamArray
         foreach (var sectorId in sectorIds)
         {
             var sector = GetSector(sectorId);
+            Console.WriteLine(data.Length);
             if (sectorIds.Length == 1)
             {
                 return sector.data;
             }
+
             for (int i = 0; i < sector.data.Length; i++)
             {
                 data[lastId] = sector.data[i];
@@ -109,10 +126,44 @@ public class SectorData : StreamArray
 
     public void InitTestData()
     {
-        var writeFile = WriteFile("This is a test string"u8.ToArray());
+        var writeFile = WriteFile("This is a test string\0"u8.ToArray());
         foreach (var i in writeFile)
         {
-            Console.WriteLine(i);
+            var s = getStartOfDataIndex(i);
+            var e = getIndexOfLastUsefulData(i);
+            var r = e - s;
+            Console.WriteLine(s);
+            Console.WriteLine(e);
+            Console.WriteLine(r);
         }
+    }
+
+    public long getIndexOfLastUsefulData(int sectorId)
+    {
+        _fs.Seek(getStartOfDataIndex(sectorId), SeekOrigin.Begin);
+        while (_br.ReadChar() != '\0')
+        {
+        }
+
+        return _fs.Position - 1;
+    }
+
+    public int[] AppendToFile(byte[] data, int lastIndx)
+    {
+        long s = getStartOfDataIndex(lastIndx);
+        long e = getIndexOfLastUsefulData(lastIndx);
+        int preAppendLength = (int)(s - e);
+        int remaining = _dataSize - preAppendLength;
+        //write till the end of the file
+        _fs.Seek(e, SeekOrigin.Begin);
+        var writtenBytes = Math.Min(data.Length, remaining);
+        _bw.Write(data, 0, writtenBytes);
+        //if the data can fit
+        if (data.Length > remaining)
+        {
+            return WriteFile(ArrayHelper<byte>.subArray(data, writtenBytes, data.Length));
+        }
+
+        return Array.Empty<int>();
     }
 }

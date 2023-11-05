@@ -91,7 +91,9 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
     public void PrintTree(int level = 0)
     {
         string indentation = new string('-', level * 2);
-        Console.WriteLine(indentation + Name + " " + IsDirectory);
+
+        var sectors = IsDirectory ? "" : SectorIds.ToString();
+        Console.WriteLine(indentation + Name + " " + IsDirectory + " " + sectors);
 
         foreach (var child in Children)
         {

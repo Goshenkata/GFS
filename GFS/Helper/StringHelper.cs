@@ -173,4 +173,11 @@ public class StringHelper
         var splitPath = StringHelper.Split(path, '/');
         return "/" + StringHelper.Join(splitPath, "/", 0, splitPath.Length - 2);
     }
+
+    public static string GetParentPath(string path, out string name)
+    {
+        var splitPath = StringHelper.Split(path, '/');
+        name = splitPath[splitPath.Length - 1];
+        return "/" + StringHelper.Join(splitPath, "/", 0, splitPath.Length - 2);
+    }
 }

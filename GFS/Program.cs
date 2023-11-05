@@ -138,8 +138,14 @@ public class Program
             data = command[2];
 
         filePath = ResolveToFullPath(filePath, fileSystemManager);
-        Console.WriteLine($"append: {isAppend}, filePath: {filePath}, data: {data}");
-        return true;
+        data += "\0";
+        if (isAppend && fileSystemManager.FileExists(filePath))
+        {
+            return fileSystemManager.AppendToFile(filePath, data);
+        }
+
+        return fileSystemManager.CreateFile(filePath, data);
+
     }
 
     private static string ResolveToFullPath(string name, FileSystemManager fs)
