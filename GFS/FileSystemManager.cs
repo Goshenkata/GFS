@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace GFS;
 
 public class FileSystemManager
@@ -5,13 +7,15 @@ public class FileSystemManager
     public const string DataFilepath = "GFS.data";
 
     private string _currentPath = "/";
+
     public string CurrentPath
     {
         get => _currentPath;
         set => _currentPath = value;
     }
 
-    private FilesystemData fsData;
+    private FilesystemData _fsData;
+    private SectorData _sectorData;
 
     private Stream _fs;
     private BinaryWriter _bw;
@@ -41,10 +45,15 @@ public class FileSystemManager
         _bw.Write(_maxFsSizeInBytes);
         _bw.Write(_sectorSizeInBytes);
 
-        fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
-        fsData.InitTestData();
-        fsData.WriteMetadata();
-        fsData.LoadFs();
+        _fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
+        _fsData.InitTestData();
+        _fsData.WriteMetadata();
+        _fsData.LoadFs();
+
+        _sectorData = new SectorData(sectorOffset + 1, maxSize, _fs, _bw, _br, sectorSize);
+        _sectorData.InitTestData();
+        int[] arr = {1};
+        Console.WriteLine(Encoding.UTF8.GetString(_sectorData.readFile(arr)));
     }
 
 
@@ -59,34 +68,34 @@ public class FileSystemManager
         _sectorSizeInBytes = _br.ReadInt32();
         long fsDataOffset = sizeof(long) + sizeof(int);
         long sectorOffset = _maxFsSizeInBytes / 10;
-        fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
-        fsData.LoadFs();
+        _fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
+        _fsData.LoadFs();
     }
 
 
     public void Mkdir(string parentPath, string dirName)
     {
-        fsData.Mkdir(parentPath, dirName);
+        _fsData.Mkdir(parentPath, dirName);
     }
 
     public void PrintTree()
     {
-        fsData.PrintTree();
+        _fsData.PrintTree();
     }
 
     public bool DirExists(string dirName)
     {
-        return fsData.DirExists(dirName);
+        return _fsData.DirExists(dirName);
     }
 
     public void Rmdir(string parentPath, string dirName)
     {
-        fsData.Rmdir(parentPath, dirName);
+        _fsData.Rmdir(parentPath, dirName);
     }
 
     public void Ls(string path)
     {
-        var currentDir= fsData.GetNodeByPath(path);
+        var currentDir = _fsData.GetNodeByPath(path);
         foreach (var child in currentDir.Children)
         {
             Console.WriteLine(child.getLsFormat());

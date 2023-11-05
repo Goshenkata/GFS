@@ -11,7 +11,7 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
     public bool IsDirectory { get; }
     public string Path { get; }
     public MyList<FileSystemNode> Children { get; set; } = new();
-    private MyList<int> sectorIds = new();
+    public MyList<int> SectorIds { get; set; } = new();
 
     public FileSystemNode(string path, string name, bool isDirectory)
     {
@@ -28,9 +28,9 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
         output.Append(IsDirectory + " ");
         if (!IsDirectory)
         {
-            foreach (var sectorId in sectorIds)
+            foreach (var sectorId in SectorIds)
             {
-                output.Append(sectorId);
+                output.Append(sectorId + " ");
             }
         }
 
@@ -76,7 +76,7 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
     {
         return $"{Path} {Name} {IsDirectory}";
     }
-    
+
     public string getLsFormat()
     {
         var type = IsDirectory ? "D" : "F";
@@ -101,39 +101,9 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
 
     public bool Equals(FileSystemNode x, FileSystemNode y)
     {
-        if (x == null && y == null)
-            return true;
-
         if (x == null || y == null)
             return false;
 
         return x.Name == y.Name && x.IsDirectory == y.IsDirectory && x.Path == y.Path;
-    }
-
-    public int GetHashCode(FileSystemNode obj)
-    {
-        if (obj == null)
-            return 0;
-
-        int hashName = obj.Name == null ? 0 : obj.Name.GetHashCode();
-        int hashIsDirectory = obj.IsDirectory.GetHashCode();
-        int hashPath = obj.Path == null ? 0 : obj.Path.GetHashCode();
-
-        return hashName ^ hashIsDirectory ^ hashPath;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null || GetType() != obj.GetType())
-        {
-            return false;
-        }
-
-        FileSystemNode b = (FileSystemNode)obj;
-
-        // Compare the individual properties
-        return Name == b.Name &&
-               IsDirectory == b.IsDirectory &&
-               Path == b.Path;
     }
 }

@@ -3,30 +3,14 @@ using GFS.Structures;
 
 namespace GFS;
 
-public class FilesystemData
+public class FilesystemData : StreamArray
 {
-    private FileSystemNode _root;
-    private BinaryWriter _bw;
-    private Stream _fs;
-    private BinaryReader _br;
-    private long _dataStart, _dataEnd;
-
-    public FilesystemData(long dataStart, long dataEnd,
-        Stream fs, BinaryWriter bw, BinaryReader br)
-    {
-        _fs = fs;
-        _fs.Seek(dataStart, SeekOrigin.Begin);
-        _bw = bw;
-        _br = br;
-        _root = new FileSystemNode("/", "root", true);
-        this._dataStart = dataStart;
-        this._dataEnd = dataEnd;
-    }
-
     public void InitTestData()
     {
         var sub1 = new FileSystemNode("/", "sub1", true);
-        sub1.Children.AddLast(new FileSystemNode("/sub1/", "file1", false));
+        var file1 = new FileSystemNode("/sub1/", "file1", false);
+        file1.SectorIds.AddLast(1);
+        sub1.Children.AddLast(file1);
         sub1.Children.AddLast(new FileSystemNode("/sub1/", "file2", false));
         _root.Children.AddLast(sub1);
         _root.Children.AddLast(new FileSystemNode("/", "file3", false));
@@ -67,7 +51,13 @@ public class FilesystemData
         {
             var line = lines[index];
             var split = StringHelper.Split(line, ' ');
-            CreateNode(split[0], split[1], bool.Parse(split[2]));
+            int[] sectors = new int[split.Length - 3];
+            for (int i = 3; i < split.Length; i++)
+            {
+                sectors[i - 3] = int.Parse(split[i]);
+
+            }
+            CreateNode(split[0], split[1], bool.Parse(split[2]), sectors);
         }
     }
 
@@ -84,7 +74,7 @@ public class FilesystemData
         return current;
     }
 
-    public void CreateNode(string filePath, string name, bool isDirectory)
+    public void CreateNode(string filePath, string name, bool isDirectory, int[] sectors)
     {
         var dir = GetNodeByPath(filePath);
         if (dir == null || !dir.IsDirectory)
@@ -92,7 +82,9 @@ public class FilesystemData
             return;
         }
 
-        dir.Children.AddLast(new FileSystemNode(filePath, name, isDirectory));
+        var node = new FileSystemNode(filePath, name, isDirectory);
+        node.SectorIds.AddLast(sectors);
+        dir.Children.AddLast(node);
     }
 
     public bool Mkdir(string path, string name)
@@ -104,7 +96,7 @@ public class FilesystemData
         WriteMetadata();
         return true;
     }
-    
+
     public bool DirExists(string path)
     {
         var node = GetNodeByPath(path);
@@ -131,16 +123,22 @@ public class FilesystemData
         for (var i = 0; i < parent.Children.Count; i++)
         {
             var current = parent.Children[i];
-            if (current.Name == dirName) {
+            if (current.Name == dirName)
+            {
                 if (!current.Children.isEmpty())
                 {
                     Console.Error.WriteLine(Messages.DirectoryIsNotEmpty);
                     return false;
                 }
+
                 parent.Children.RemoveAt(i);
             }
         }
+
         WriteMetadata();
         return true;
     }
+
+    public FilesystemData(long dataStart, long dataEnd, Stream fs, BinaryWriter bw, BinaryReader br) : base(dataStart,
+        dataEnd, fs, bw, br) { }
 }

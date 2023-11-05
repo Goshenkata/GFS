@@ -255,8 +255,6 @@ public class Program
         //turn kb to bytes;
         maxSize *= 1024;
         sectorSize *= 1024;
-        //todo remove, just for testing
-        maxSize = 10000;
         fileSystemManager.CreateFilesystem(maxSize, sectorSize);
         return true;
     }

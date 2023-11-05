@@ -20,11 +20,16 @@ public static class Messages
     public const string Atleast16Sectors = "The filesystem should be large enough for atleast 16 sectors";
     public const string FilesystemLoadedSuccessfully = "Filesystem loaded succesfully";
     public const string FilesystemCreated = "Filesystem created succesfully";
+
     public const string HelpCommand = @"Gosho File System list of commands, the * symbol denotes an optional paramether: 
 
 > create {sectorSize}* {sectorSizeUnit}* {maxFilesystemSizeKb}*          Creates the file system if it does not exist
 > mkdir {dirName}                                                        Creates a directory
-> tree                                                                   Prints the entire file tree";
+> tree                                                                   Prints the entire file system tree
+> ls {dirName}*                                                          Lists the contents of a directorCreates a directory
+> rmdir {dirName}                                                        Removes a directory
+> cd {dirName}                                                           Changes the current directory
+";
 
     public const string DirectoryDoesNotExist = "Directory does not exists";
     public const string DirExists = "Directory already exists";

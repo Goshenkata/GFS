@@ -80,6 +80,14 @@ public class MyList<T> : IEnumerable<T>
         count++;
     }
 
+    public void AddLast(T[] data)
+    {
+        for (var i = 0; i < data.Length; i++)
+        {
+            AddLast(data[i]);
+        }
+    }
+
     public T GetLast()
     {
         if (tail is not null)
