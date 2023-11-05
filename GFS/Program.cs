@@ -1,4 +1,7 @@
-﻿using GFS.enums;
+﻿using System.Runtime;
+using System.Runtime.CompilerServices;
+using System.Text;
+using GFS.enums;
 using GFS.helper;
 
 namespace GFS;
@@ -63,6 +66,7 @@ public class Program
     }
 
     private static bool ProcessInput(string[] command, FileSystemManager fileSystemManager)
+
     {
         if (command.Length == 0)
         {
@@ -104,10 +108,70 @@ public class Program
                 }
 
                 return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.Ls);
+            case "write":
+                return WriteCommand(command, fileSystemManager);
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
         }
+    }
+
+    private static bool WriteCommand(string[] command, FileSystemManager fileSystemManager)
+    {
+        if (command.Length < 2)
+        {
+            Console.WriteLine(Messages.InvalidArgumentList);
+            return false;
+        }
+
+        bool isAppend = command[1] == "+append";
+        string filePath = isAppend ? command[2] : command[1];
+        string data = "";
+        if (isAppend)
+        {
+            if (command.Length >= 4)
+            {
+                data = command[3];
+            }
+        }
+        else if (command.Length >= 3)
+            data = command[2];
+
+        filePath = ResolveToFullPath(filePath, fileSystemManager);
+        Console.WriteLine($"append: {isAppend}, filePath: {filePath}, data: {data}");
+        return true;
+    }
+
+    private static string ResolveToFullPath(string name, FileSystemManager fs)
+    {
+        string output = "/";
+        string[] pathParts = StringHelper.Split(name, '/');
+        if (!StringHelper.IsPath(name))
+        {
+            output = fs.CurrentPath;
+        }
+
+
+        
+        for (int i = 0; i < pathParts.Length; i++)
+        {
+            if (i == pathParts.Length - 1)
+            {
+                output += pathParts[i];
+                break;
+            }
+
+            if (pathParts[i] == "..")
+            {
+                output = StringHelper.GetParentPath(output);
+            }
+            else
+            {
+                output += pathParts[i] + "/";
+            }
+        }
+
+        return output;
     }
 
     private static bool DirectoryCommand(string[] command, FileSystemManager fileSystemManager,

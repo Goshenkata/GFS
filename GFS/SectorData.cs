@@ -1,6 +1,3 @@
-using System.Text;
-using GFS.Structures;
-
 namespace GFS;
 
 public class SectorData : StreamArray

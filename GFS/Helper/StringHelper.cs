@@ -14,9 +14,10 @@ public class StringHelper
         var accumulator = new MyStringBuilder();
         MyList<string> list = new MyList<string>();
         bool isInWhiteSpace = false;
+        bool isInQuotes = false;
         foreach (var c in command)
         {
-            if (c == ' ')
+            if (c == ' ' && !isInQuotes)
             {
                 if (!isInWhiteSpace)
                 {
@@ -24,6 +25,17 @@ public class StringHelper
                     accumulator.Clear();
                     isInWhiteSpace = true;
                 }
+            }
+            else if (c == '"')
+            {
+                if (isInQuotes)
+                {
+                    list.AddLast(accumulator.ToString());
+                    accumulator.Clear();
+                }
+
+                isInQuotes = !isInQuotes;
+                isInWhiteSpace = false;
             }
             else
             {
@@ -87,7 +99,7 @@ public class StringHelper
 
     public static bool IsPath(string name)
     {
-        return name != null && name[0] == '/';
+        return name[0] == '/';
     }
 
     public static string Join(string[] items, string delimiter)
