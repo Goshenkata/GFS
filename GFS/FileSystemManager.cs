@@ -134,11 +134,23 @@ public class FileSystemManager
         }
         else
         {
-            var newSectorsList =  new MyList<int>();
+            var newSectorsList = new MyList<int>();
             newSectorsList.AddLast(sectors);
             node.SectorIds = newSectorsList;
         }
+
         _fsData.WriteMetadata();
         return true;
+    }
+
+    public string Cat(string path)
+    {
+        var node = _fsData.GetNodeByPath(path);
+        if (node != null)
+        {
+            return Encoding.UTF8.GetString(_sectorData.readFile(node.SectorIds.GetArray()));
+        }
+
+        return string.Empty;
     }
 }

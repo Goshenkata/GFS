@@ -1,7 +1,4 @@
-﻿using System.Runtime;
-using System.Runtime.CompilerServices;
-using System.Text;
-using GFS.enums;
+﻿using GFS.enums;
 using GFS.helper;
 
 namespace GFS;
@@ -110,10 +107,29 @@ public class Program
                 return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.Ls);
             case "write":
                 return WriteCommand(command, fileSystemManager);
+            case "cat":
+                return CatCommand(command, fileSystemManager);
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
         }
+    }
+
+    private static bool CatCommand(string[] command, FileSystemManager fileSystemManager)
+    {
+        if (command.Length < 2)
+        {
+            Console.WriteLine(Messages.InvalidArgumentList);
+            return false;
+        }
+        var path = ResolveToFullPath(command[1], fileSystemManager);
+        if (!fileSystemManager.FileExists(path))
+        {
+            Console.WriteLine(Messages.FileDoesNotExist);
+        }
+
+        Console.WriteLine(fileSystemManager.Cat(path));
+        return true;
     }
 
     private static bool WriteCommand(string[] command, FileSystemManager fileSystemManager)

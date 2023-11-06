@@ -32,6 +32,7 @@ public static class Messages
 ";
 
     public const string DirectoryDoesNotExist = "Directory does not exists";
+    public const string FileDoesNotExist = "File does not exists";
     public const string DirExists = "Directory already exists";
     public const string InvalidDirName = "Invalid directory name";
     public const string DirectoryIsNotEmpty = "Directory is not empty";
