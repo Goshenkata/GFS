@@ -54,8 +54,6 @@ public class FileSystemManager
 
         _sectorData = new SectorData(sectorOffset + 1, maxSize, _fs, _bw, _br, sectorSize);
         _sectorData.InitTestData();
-        int[] arr = { 1 };
-        Console.WriteLine(Encoding.UTF8.GetString(_sectorData.readFile(arr)));
     }
 
 
@@ -72,6 +70,8 @@ public class FileSystemManager
         long sectorOffset = _maxFsSizeInBytes / 10;
         _fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
         _fsData.LoadFs();
+        
+        _sectorData = new SectorData(sectorOffset + 1, _maxFsSizeInBytes, _fs, _bw, _br, _sectorSizeInBytes);
     }
 
 
@@ -109,10 +109,10 @@ public class FileSystemManager
         }
     }
 
-    public bool AppendToFile(string filePath, string data)
+    public bool AppendToFile(string filePath, byte[] data)
     {
         var node = _fsData.GetNodeByPath(filePath);
-        int[] newSectors = _sectorData.AppendToFile(Encoding.UTF8.GetBytes(data), node.SectorIds.GetLast());
+        int[] newSectors = _sectorData.AppendToFile(data, node.SectorIds.GetLast());
         if (newSectors.Length > 0)
         {
             node.SectorIds.AddLast(newSectors);
@@ -122,10 +122,10 @@ public class FileSystemManager
         return true;
     }
 
-    public bool CreateFile(string filePath, string data)
+    public bool CreateFile(string filePath, byte[] data)
     {
         var node = _fsData.GetNodeByPath(filePath);
-        var sectors = _sectorData.WriteFile(Encoding.UTF8.GetBytes(data));
+        var sectors = _sectorData.WriteFile(data);
         if (node == null)
         {
             string fileName;
@@ -152,5 +152,21 @@ public class FileSystemManager
         }
 
         return string.Empty;
+    }
+
+    public bool ImportFile(string outsideFilePath, string myFilePath, bool isAppend)
+    {
+        byte[] data = File.ReadAllBytes(outsideFilePath);
+            if (isAppend && FileExists(myFilePath))
+            {
+                //append to file
+                AppendToFile(myFilePath, data);
+            }
+            else
+            {
+                CreateFile(myFilePath, data);
+            }
+
+            return true;
     }
 }

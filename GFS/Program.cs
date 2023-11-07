@@ -1,5 +1,7 @@
-﻿using GFS.enums;
+﻿using System.Text;
+using GFS.enums;
 using GFS.helper;
+using GFS.Structures;
 
 namespace GFS;
 
@@ -109,10 +111,49 @@ public class Program
                 return WriteCommand(command, fileSystemManager);
             case "cat":
                 return CatCommand(command, fileSystemManager);
+            case "import":
+                return ImportCommand(command, fileSystemManager);
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
         }
+    }
+
+    private static bool ImportCommand(string[] command, FileSystemManager fileSystemManager)
+    {
+        if (command.Length < 3)
+        {
+            Console.WriteLine(Messages.InvalidArgumentList);
+            return false;
+        }
+
+        bool isAppend = command[1] == "+append";
+        string outsideFilePath;
+        string myFilePath;
+        if (isAppend)
+        {
+            if (command.Length < 4)
+            {
+                Console.WriteLine(Messages.InvalidArgumentList);
+                return false;
+            }
+
+            outsideFilePath = command[2];
+            myFilePath = ResolveToFullPath(command[3], fileSystemManager);
+        }
+        else
+        {
+            outsideFilePath = command[1];
+            myFilePath = ResolveToFullPath(command[2], fileSystemManager);
+        }
+
+        if (!File.Exists(outsideFilePath))
+        {
+            Console.WriteLine(Messages.FileDoesNotExist);
+            return false;
+        }
+
+        return fileSystemManager.ImportFile(outsideFilePath, myFilePath, isAppend);
     }
 
     private static bool CatCommand(string[] command, FileSystemManager fileSystemManager)
@@ -122,6 +163,7 @@ public class Program
             Console.WriteLine(Messages.InvalidArgumentList);
             return false;
         }
+
         var path = ResolveToFullPath(command[1], fileSystemManager);
         if (!fileSystemManager.FileExists(path))
         {
@@ -157,11 +199,10 @@ public class Program
         data += "\0";
         if (isAppend && fileSystemManager.FileExists(filePath))
         {
-            return fileSystemManager.AppendToFile(filePath, data);
+            return fileSystemManager.AppendToFile(filePath, Encoding.UTF8.GetBytes(data));
         }
 
-        return fileSystemManager.CreateFile(filePath, data);
-
+        return fileSystemManager.CreateFile(filePath, Encoding.UTF8.GetBytes(data));
     }
 
     private static string ResolveToFullPath(string name, FileSystemManager fs)
@@ -174,7 +215,6 @@ public class Program
         }
 
 
-        
         for (int i = 0; i < pathParts.Length; i++)
         {
             if (i == pathParts.Length - 1)

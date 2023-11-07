@@ -108,6 +108,7 @@ public class FilesystemData : StreamArray
         _fs.Seek(_dataStart, SeekOrigin.Begin);
         var deserialized = _br.ReadString();
         DeserializeFs(deserialized);
+        
     }
 
     public void PrintTree()

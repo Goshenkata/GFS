@@ -72,11 +72,12 @@ public class SectorData : StreamArray
     {
         int neededSectors = (int)Math.Ceiling((double)data.Length / _dataSize);
         int[] sectorIds = new int[neededSectors];
+        var lastId = 0;
         for (int i = 0; i < data.Length; i += _dataSize)
         {
             int sector = TakeNextAvalableSector();
             //if there are no more available sectors, free all the sectors and return an empty array
-            sectorIds[i] = sector;
+            sectorIds[lastId++] = sector;
             if (sector == -1)
             {
                 foreach (var sectorId in sectorIds)
@@ -89,7 +90,7 @@ public class SectorData : StreamArray
 
             //go to the free data section of the array
             _fs.Seek(getStartOfDataIndex(sector), SeekOrigin.Begin);
-            _bw.Write(data, i, Math.Min(data.Length, _dataSize));
+            _bw.Write(data, i, Math.Min(data.Length - i, _dataSize));
         }
 
         return sectorIds;
