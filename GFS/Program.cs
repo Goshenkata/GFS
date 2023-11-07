@@ -107,16 +107,56 @@ public class Program
                 }
 
                 return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.Ls);
+            case "rm":
+                return RmCommand(command, fileSystemManager);
             case "write":
                 return WriteCommand(command, fileSystemManager);
             case "cat":
                 return CatCommand(command, fileSystemManager);
             case "import":
                 return ImportCommand(command, fileSystemManager);
+            case "export":
+                return ExportCommand(command, fileSystemManager);
             default:
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
         }
+    }
+
+    private static bool RmCommand(string[] command, FileSystemManager fileSystemManager)
+    {
+        if (command.Length < 2)
+        {
+            Console.WriteLine(command[1]);
+            return false;
+        }
+
+        var path = ResolveToFullPath(command[1], fileSystemManager);
+        if (!fileSystemManager.FileExists(path))
+        {
+            Console.WriteLine(Messages.FileDoesNotExist);
+            return false;
+        } 
+        fileSystemManager.RmFile(path);
+        return true;
+    }
+
+    private static bool ExportCommand(string[] command, FileSystemManager fileSystemManager)
+    {
+        if (command.Length < 3)
+        {
+            Console.WriteLine(Messages.InvalidArgumentList);
+            return false;
+        }
+
+        var source = ResolveToFullPath(command[1], fileSystemManager);
+        var destination = command[2];
+        if (!fileSystemManager.FileExists(source))
+        {
+            Console.WriteLine(Messages.FileDoesNotExist);
+        }
+
+        return fileSystemManager.Export(source, destination);
     }
 
     private static bool ImportCommand(string[] command, FileSystemManager fileSystemManager)
@@ -128,8 +168,8 @@ public class Program
         }
 
         bool isAppend = command[1] == "+append";
-        string outsideFilePath;
-        string myFilePath;
+        string source;
+        string destination;
         if (isAppend)
         {
             if (command.Length < 4)
@@ -138,22 +178,22 @@ public class Program
                 return false;
             }
 
-            outsideFilePath = command[2];
-            myFilePath = ResolveToFullPath(command[3], fileSystemManager);
+            source = command[2];
+            destination = ResolveToFullPath(command[3], fileSystemManager);
         }
         else
         {
-            outsideFilePath = command[1];
-            myFilePath = ResolveToFullPath(command[2], fileSystemManager);
+            source = command[1];
+            destination = ResolveToFullPath(command[2], fileSystemManager);
         }
 
-        if (!File.Exists(outsideFilePath))
+        if (!File.Exists(source))
         {
             Console.WriteLine(Messages.FileDoesNotExist);
             return false;
         }
 
-        return fileSystemManager.ImportFile(outsideFilePath, myFilePath, isAppend);
+        return fileSystemManager.ImportFile(source, destination, isAppend);
     }
 
     private static bool CatCommand(string[] command, FileSystemManager fileSystemManager)

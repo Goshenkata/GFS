@@ -80,10 +80,7 @@ public class SectorData : StreamArray
             sectorIds[lastId++] = sector;
             if (sector == -1)
             {
-                foreach (var sectorId in sectorIds)
-                {
-                    FreeSector(sectorId);
-                }
+                Free(sectorIds);
 
                 return Array.Empty<int>();
             }
@@ -103,7 +100,6 @@ public class SectorData : StreamArray
         foreach (var sectorId in sectorIds)
         {
             var sector = GetSector(sectorId);
-            Console.WriteLine(data.Length);
             if (sectorIds.Length == 1)
             {
                 return sector.data;
@@ -119,7 +115,14 @@ public class SectorData : StreamArray
         return data;
     }
 
-    private void FreeSector(int sectorId)
+    public void Free(int[] sectors)
+    {
+        foreach (var sector in sectors)
+        {
+            Free(sector);
+        }
+    }
+    public void Free(int sectorId)
     {
         _fs.Seek(_dataStart + sectorId * _dataSize, SeekOrigin.Begin);
         _bw.Write(false);
@@ -127,16 +130,7 @@ public class SectorData : StreamArray
 
     public void InitTestData()
     {
-        var writeFile = WriteFile("This is a test string\0"u8.ToArray());
-        foreach (var i in writeFile)
-        {
-            var s = getStartOfDataIndex(i);
-            var e = getIndexOfLastUsefulData(i);
-            var r = e - s;
-            Console.WriteLine(s);
-            Console.WriteLine(e);
-            Console.WriteLine(r);
-        }
+        WriteFile("This is a test string\0"u8.ToArray());
     }
 
     public long getIndexOfLastUsefulData(int sectorId)

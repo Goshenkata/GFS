@@ -29,6 +29,10 @@ public static class Messages
 > ls {dirName}*                                                          Lists the contents of a directorCreates a directory
 > rmdir {dirName}                                                        Removes a directory
 > cd {dirName}                                                           Changes the current directory
+> rm {fileName}                                                          Removes the file
+> write +append* {file} ""data""                                       Creates a file if it does not exists and writes the data
+> import +append* {source} {destination}                                 Creates a file if it does not exists and writes the data
+> export {source} {destination}                                          Creates a file if it does not exists and writes the data
 ";
 
     public const string DirectoryDoesNotExist = "Directory does not exists";

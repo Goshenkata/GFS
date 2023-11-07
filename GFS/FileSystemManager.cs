@@ -70,7 +70,7 @@ public class FileSystemManager
         long sectorOffset = _maxFsSizeInBytes / 10;
         _fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
         _fsData.LoadFs();
-        
+
         _sectorData = new SectorData(sectorOffset + 1, _maxFsSizeInBytes, _fs, _bw, _br, _sectorSizeInBytes);
     }
 
@@ -157,16 +157,41 @@ public class FileSystemManager
     public bool ImportFile(string outsideFilePath, string myFilePath, bool isAppend)
     {
         byte[] data = File.ReadAllBytes(outsideFilePath);
-            if (isAppend && FileExists(myFilePath))
-            {
-                //append to file
-                AppendToFile(myFilePath, data);
-            }
-            else
-            {
-                CreateFile(myFilePath, data);
-            }
+        if (isAppend && FileExists(myFilePath))
+        {
+            //append to file
+            AppendToFile(myFilePath, data);
+        }
+        else
+        {
+            CreateFile(myFilePath, data);
+        }
 
-            return true;
+        return true;
+    }
+
+    public bool Export(string sourceFromFs, string destinationOnDisk)
+    {
+        using var bw = new BinaryWriter(File.Open(destinationOnDisk, FileMode.OpenOrCreate, FileAccess.Write));
+        var node = _fsData.GetNodeByPath(sourceFromFs);
+        var data = _sectorData.readFile(node.SectorIds.ToArray());
+        bw.Write(data);
+
+        return true;
+    }
+
+    public void RmFile(string path)
+    {
+        var file = _fsData.GetNodeByPath(path);
+        _sectorData.Free(file.SectorIds.ToArray());
+        var parent = _fsData.GetNodeByPath(StringHelper.GetParentPath(path));
+        for (var index = 0; index < parent.Children.Count; index++)
+        {
+            if (parent.Children[index].Equals(file))
+            {
+                parent.Children.RemoveAt(index);
+            }
+        }
+        _fsData.WriteMetadata();
     }
 }
