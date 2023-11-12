@@ -112,31 +112,32 @@ public class FileSystemManager
     public bool AppendToFile(string filePath, byte[] data)
     {
         var node = _fsData.GetNodeByPath(filePath);
-        int[] newSectors = _sectorData.AppendToFile(data, node.SectorIds.GetLast());
+        int[] newSectors = _sectorData.AppendToFile(data, ref node);
         if (newSectors.Length > 0)
         {
             node.SectorIds.AddLast(newSectors);
-            _fsData.WriteMetadata();
         }
 
+        _fsData.WriteMetadata();
         return true;
     }
 
     public bool CreateFile(string filePath, byte[] data)
     {
         var node = _fsData.GetNodeByPath(filePath);
-        var sectors = _sectorData.WriteFile(data);
+        var writeFileDto = _sectorData.WriteFile(data);
         if (node == null)
         {
             string fileName;
             string parentPath = StringHelper.GetParentPath(filePath, out fileName);
-            _fsData.CreateNode(parentPath, fileName, false, sectors);
+            _fsData.CreateNode(parentPath, fileName, false, writeFileDto.Sectors, writeFileDto.LastDataIndex);
         }
         else
         {
             var newSectorsList = new MyList<int>();
-            newSectorsList.AddLast(sectors);
+            newSectorsList.AddLast(writeFileDto.Sectors);
             node.SectorIds = newSectorsList;
+            node.LastDataIndex = writeFileDto.LastDataIndex;
         }
 
         _fsData.WriteMetadata();
@@ -148,7 +149,7 @@ public class FileSystemManager
         var node = _fsData.GetNodeByPath(path);
         if (node != null)
         {
-            return Encoding.UTF8.GetString(_sectorData.readFile(node.SectorIds.GetArray()));
+            return Encoding.UTF8.GetString(_sectorData.readFile(node));
         }
 
         return string.Empty;
@@ -174,7 +175,7 @@ public class FileSystemManager
     {
         using var bw = new BinaryWriter(File.Open(destinationOnDisk, FileMode.OpenOrCreate, FileAccess.Write));
         var node = _fsData.GetNodeByPath(sourceFromFs);
-        var data = _sectorData.readFile(node.SectorIds.ToArray());
+        var data = _sectorData.readFile(node);
         bw.Write(data);
 
         return true;
@@ -192,6 +193,7 @@ public class FileSystemManager
                 parent.Children.RemoveAt(index);
             }
         }
+
         _fsData.WriteMetadata();
     }
 }

@@ -51,13 +51,13 @@ public class FilesystemData : StreamArray
         {
             var line = lines[index];
             var split = StringHelper.Split(line, ' ');
-            int[] sectors = new int[split.Length - 3];
-            for (int i = 3; i < split.Length; i++)
+            int[] sectors = new int[split.Length - 4];
+            for (int i = 4; i < split.Length; i++)
             {
-                sectors[i - 3] = int.Parse(split[i]);
+                sectors[i - 4] = int.Parse(split[i]);
 
             }
-            CreateNode(split[0], split[1], bool.Parse(split[2]), sectors);
+            CreateNode(split[0], split[1], bool.Parse(split[2]), sectors, int.Parse(split[3]));
         }
     }
 
@@ -74,7 +74,7 @@ public class FilesystemData : StreamArray
         return current;
     }
 
-    public void CreateNode(string filePath, string name, bool isDirectory, int[] sectors)
+    public void CreateNode(string filePath, string name, bool isDirectory, int[] sectors, int lastDataIndex = 0)
     {
         var dir = GetNodeByPath(filePath);
         if (dir == null || !dir.IsDirectory)
@@ -82,7 +82,7 @@ public class FilesystemData : StreamArray
             return;
         }
 
-        var node = new FileSystemNode(filePath, name, isDirectory);
+        var node = new FileSystemNode(filePath, name, isDirectory, lastDataIndex);
         node.SectorIds.AddLast(sectors);
         dir.Children.AddLast(node);
     }

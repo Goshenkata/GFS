@@ -236,7 +236,6 @@ public class Program
             data = command[2];
 
         filePath = ResolveToFullPath(filePath, fileSystemManager);
-        data += "\0";
         if (isAppend && fileSystemManager.FileExists(filePath))
         {
             return fileSystemManager.AppendToFile(filePath, Encoding.UTF8.GetBytes(data));

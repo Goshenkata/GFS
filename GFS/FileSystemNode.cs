@@ -12,12 +12,14 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
     public string Path { get; }
     public MyList<FileSystemNode> Children { get; set; } = new();
     public MyList<int> SectorIds { get; set; } = new();
+    public int LastDataIndex { get; set; } = 0;
 
-    public FileSystemNode(string path, string name, bool isDirectory)
+    public FileSystemNode(string path, string name, bool isDirectory, int lastDataIndex = 0)
     {
         Name = name;
         Path = path;
         IsDirectory = isDirectory;
+        LastDataIndex = lastDataIndex;
     }
 
     public string Serialize()
@@ -26,6 +28,7 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
         output.Append(Path + " ");
         output.Append(Name + " ");
         output.Append(IsDirectory + " ");
+        output.Append(LastDataIndex + " ");
         if (!IsDirectory)
         {
             foreach (var sectorId in SectorIds)
@@ -93,7 +96,7 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
         string indentation = new string('-', level * 2);
 
         var sectors = IsDirectory ? "" : SectorIds.ToString();
-        Console.WriteLine(indentation + Name + " " + IsDirectory + " " + sectors);
+        Console.WriteLine(indentation + Name + " " + IsDirectory + " " +LastDataIndex + " " + sectors);
 
         foreach (var child in Children)
         {
