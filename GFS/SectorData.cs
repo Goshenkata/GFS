@@ -77,11 +77,13 @@ public class SectorData : StreamArray
             var count = Math.Min(data.Length - i, _dataSize);
             lastSectorIndexData = count;
             _fs.Seek(getStartOfDataIndex(sector), SeekOrigin.Begin);
-            _bw.Write(data, i, count);
+
+            var subData = ArrayHelper<byte>.subArray(data, i, i + count);
+            _bw.Write(subData);
             
             //write the hash
             _fs.Seek(getStartOfSectorIndex(sector) + sizeof(bool), SeekOrigin.Begin);
-            _bw.Write(ComputeDataHash(data));
+            _bw.Write(ComputeDataHash(subData));
         }
 
         return new WriteFileDto(sectorIds, lastSectorIndexData);
@@ -139,7 +141,7 @@ public class SectorData : StreamArray
 
         //update hash
         _fs.Seek(getStartOfDataIndex(lastSector), SeekOrigin.Begin);
-        var updatedData = _br.ReadBytes(writtenBytes);
+        var updatedData = _br.ReadBytes(node.LastDataIndex);
         var newHash = ComputeDataHash(updatedData);
         _fs.Seek(getStartOfSectorIndex(lastSector) + sizeof(bool), SeekOrigin.Begin);
         _bw.Write(newHash);
