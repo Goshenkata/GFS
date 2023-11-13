@@ -53,7 +53,6 @@ public class FileSystemManager
         _fsData.LoadFs();
 
         _sectorData = new SectorData(sectorOffset + 1, maxSize, _fs, _bw, _br, sectorSize);
-        _sectorData.InitTestData();
     }
 
 
@@ -195,5 +194,10 @@ public class FileSystemManager
         }
 
         _fsData.WriteMetadata();
+    }
+
+    public void PrintSectorInfo(int sector)
+    {
+        Console.WriteLine(_sectorData.GetSector(sector));
     }
 }

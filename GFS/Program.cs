@@ -77,7 +77,7 @@ public class Program
             case "create":
                 if (command.Length == 1)
                 {
-                    command = new[] { "create", "10", "GB", "32" };
+                    command = new[] { "create", "10", "GB", "8" };
                 }
 
                 return CreateCommand(command, fileSystemManager);
@@ -93,6 +93,8 @@ public class Program
                 return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.Rmdir);
             case "cd":
                 return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.Cd);
+            case "sector":
+                return SectorCommand(command, fileSystemManager);
             case "ls":
                 if (command.Length == 1)
                 {
@@ -121,6 +123,14 @@ public class Program
                 Console.Error.WriteLine(Messages.InvalidCommand);
                 return false;
         }
+    }
+
+    //todo only for debug, remove
+    private static bool SectorCommand(string[] command, FileSystemManager fileSystemManager)
+    {
+        int sector = int.Parse(command[1]);
+        fileSystemManager.PrintSectorInfo(sector);
+        return true;
     }
 
     private static bool RmCommand(string[] command, FileSystemManager fileSystemManager)

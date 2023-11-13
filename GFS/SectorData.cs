@@ -7,13 +7,12 @@ public class SectorData : StreamArray
     private int _sectorSize;
     private int _dataSize;
     private int _lastSectorId;
-    private int _lastTakenSector;
 
     public SectorData(long dataStart, long dataEnd, Stream fs, BinaryWriter bw, BinaryReader br, int sectorSize) : base(
         dataStart, dataEnd, fs, bw, br)
     {
         _sectorSize = sectorSize;
-        _dataSize = sectorSize - sizeof(bool);
+        _dataSize = sectorSize - sizeof(bool) - sizeof(long);
         _lastSectorId = (int)Math.Floor((double)(dataEnd - dataStart) / sectorSize) - 1;
     }
 
@@ -27,31 +26,19 @@ public class SectorData : StreamArray
         return _dataStart + sectorId * _sectorSize + (_sectorSize - _dataSize);
     }
 
-    private SectorNode GetSector(int sectorId)
+    public SectorNode GetSector(int sectorId)
     {
         _fs.Seek(getStartOfSectorIndex(sectorId), SeekOrigin.Begin);
         SectorNode sectorNode = new SectorNode();
-        sectorNode.IsFree = _br.ReadBoolean();
+        sectorNode.IsTaken = _br.ReadBoolean();
+        sectorNode.hash = _br.ReadInt64();
         sectorNode.data = _br.ReadBytes(_dataSize);
         return sectorNode;
     }
 
     private int TakeNextAvalableSector()
     {
-        for (int i = _lastTakenSector + 1; i <= _lastSectorId; i++)
-        {
-            _fs.Seek(_dataStart + i * _sectorSize, SeekOrigin.Begin);
-            bool isTaken = _br.ReadBoolean();
-            if (!isTaken)
-            {
-                //move to the boolean
-                _fs.Seek(-sizeof(bool), SeekOrigin.Current);
-                _bw.Write(true);
-                return i;
-            }
-        }
-
-        for (int i = 0; i < _lastTakenSector; i++)
+        for (int i = 0; i <= _lastSectorId; i++)
         {
             _fs.Seek(_dataStart + i * _sectorSize, SeekOrigin.Begin);
             bool isTaken = _br.ReadBoolean();
@@ -82,15 +69,19 @@ public class SectorData : StreamArray
             if (sector == -1)
             {
                 Free(sectorIds);
-
                 return new WriteFileDto(Array.Empty<int>(), 0);
             }
 
             //go to the free data section of the array
+
             var count = Math.Min(data.Length - i, _dataSize);
             lastSectorIndexData = count;
             _fs.Seek(getStartOfDataIndex(sector), SeekOrigin.Begin);
             _bw.Write(data, i, count);
+            
+            //write the hash
+            _fs.Seek(getStartOfSectorIndex(sector) + sizeof(bool), SeekOrigin.Begin);
+            _bw.Write(ComputeDataHash(data));
         }
 
         return new WriteFileDto(sectorIds, lastSectorIndexData);
@@ -98,7 +89,7 @@ public class SectorData : StreamArray
 
     public byte[] readFile(FileSystemNode node)
     {
-        byte[] data = new byte[(node.SectorIds.Count -1) * _dataSize + node.LastDataIndex];
+        byte[] data = new byte[(node.SectorIds.Count - 1) * _dataSize + node.LastDataIndex];
         int lastId = 0;
         for (var index = 0; index < node.SectorIds.Count - 1; index++)
         {
@@ -130,33 +121,49 @@ public class SectorData : StreamArray
 
     public void Free(int sectorId)
     {
-        _fs.Seek(_dataStart + sectorId * _dataSize, SeekOrigin.Begin);
+        _fs.Seek(getStartOfSectorIndex(sectorId), SeekOrigin.Begin);
         _bw.Write(false);
-    }
-
-    public void InitTestData()
-    {
-        WriteFile("This is a test string\0"u8.ToArray());
     }
 
 
     public int[] AppendToFile(byte[] data, ref FileSystemNode node)
     {
-        var endP = getStartOfDataIndex(node.SectorIds[^1]) + node.LastDataIndex;
+        var lastSector = node.SectorIds[^1];
+        var endP = getStartOfDataIndex(lastSector) + node.LastDataIndex;
         int remaining = _dataSize - node.LastDataIndex;
         //write till the end of the file
         _fs.Seek(endP, SeekOrigin.Begin);
         var writtenBytes = Math.Min(data.Length, remaining);
         _bw.Write(data, 0, writtenBytes);
         node.LastDataIndex += writtenBytes;
+
+        //update hash
+        _fs.Seek(getStartOfDataIndex(lastSector), SeekOrigin.Begin);
+        var updatedData = _br.ReadBytes(writtenBytes);
+        var newHash = ComputeDataHash(updatedData);
+        _fs.Seek(getStartOfSectorIndex(lastSector) + sizeof(bool), SeekOrigin.Begin);
+        _bw.Write(newHash);
+
         //if the data can fit
         if (data.Length > remaining)
         {
+            //write the remaining sectors;
             var res = WriteFile(ArrayHelper<byte>.subArray(data, writtenBytes, data.Length));
             node.LastDataIndex = res.LastDataIndex;
             return res.Sectors;
         }
 
         return Array.Empty<int>();
+    }
+
+    private long ComputeDataHash(byte[] input)
+    {
+        long hash = 17L;
+        foreach (byte b in input)
+        {
+            hash = hash * 31L + b;
+        }
+
+        return hash;
     }
 }

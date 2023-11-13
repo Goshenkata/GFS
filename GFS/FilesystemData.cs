@@ -9,7 +9,6 @@ public class FilesystemData : StreamArray
     {
         var sub1 = new FileSystemNode("/", "sub1", true);
         var file1 = new FileSystemNode("/sub1/", "file1", false);
-        file1.SectorIds.AddLast(1);
         sub1.Children.AddLast(file1);
         sub1.Children.AddLast(new FileSystemNode("/sub1/", "file2", false));
         _root.Children.AddLast(sub1);

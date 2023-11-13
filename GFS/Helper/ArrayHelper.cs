@@ -16,6 +16,18 @@ public class ArrayHelper<T>
         {
             result[i] = original[start + i];
         }
+
+        return result;
+    }
+
+    public static T[] mergeArrays(T[] a, T[] b)
+    {
+        var result = new T[a.Length + b.Length];
+        var lastIndx = 0;
+        for (var i = 0; i < a.Length; i++)
+            result[lastIndx++] = a[i];
+        for (var i = 0; i < b.Length; i++)
+            result[lastIndx++] = b[i];
         return result;
     }
 }
