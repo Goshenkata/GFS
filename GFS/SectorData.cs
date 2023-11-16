@@ -118,7 +118,8 @@ public class SectorData : StreamArray
 
     private int GetSectorIdWithSameHash(long hash)
     {
-        for (int i = 0; i <= getLastWrittenSector(); i++)
+        var lastWrittenSector = getLastWrittenSector();
+        for (int i = 0; i <= lastWrittenSector; i++)
         {
             _fs.Seek(GetStartOfSectorIndex(i), SeekOrigin.Begin);
             var isTaken = _br.ReadBoolean();
@@ -173,32 +174,33 @@ public class SectorData : StreamArray
 
     public int[] AppendToFile(byte[] data, ref FileSystemNode node)
     {
-        var lastSector = node.SectorIds[^1];
-        var endP = GetStartOfDataIndex(lastSector) + node.LastDataIndex;
+        var lastSectorId = node.SectorIds[^1];
+        var lastSector = GetSector(lastSectorId);
         int remaining = _dataSize - node.LastDataIndex;
-        //write till the end of the file
-        _fs.Seek(endP, SeekOrigin.Begin);
+
+        var currentData = ArrayHelper<byte>.subArray(lastSector.data, 0, node.LastDataIndex);
+        var fillSectorData = ArrayHelper<byte>.mergeArrays(currentData, data);
+
         var writtenBytes = Math.Min(data.Length, remaining);
         node.LastDataIndex += writtenBytes;
 
-        var subData = ArrayHelper<byte>.subArray(data, 0, writtenBytes);
-        //todo hash must not be subdata
-        var hash = ComputeDataHash(subData);
+
+        var hash = ComputeDataHash(fillSectorData);
 
         var repeatSector = GetSectorIdWithSameHash(hash);
         if (repeatSector != -1)
         {
             node.SectorIds[^1] = repeatSector;
-            lastSector = repeatSector;
+            lastSectorId = repeatSector;
         }
         else
         {
-            _bw.Write(subData);
+            _fs.Seek(GetStartOfDataIndex(lastSectorId), SeekOrigin.Begin);
+            _bw.Write(fillSectorData);
         }
 
         //update hash
-        _fs.Seek(GetStartOfDataIndex(lastSector), SeekOrigin.Begin);
-        _fs.Seek(GetStartOfSectorIndex(lastSector) + sizeof(bool), SeekOrigin.Begin);
+        _fs.Seek(GetStartOfSectorIndex(lastSectorId) + sizeof(bool), SeekOrigin.Begin);
         _bw.Write(hash);
 
         //if the data can fit
@@ -207,7 +209,6 @@ public class SectorData : StreamArray
             //write the remaining sectors;
             var res = WriteFile(ArrayHelper<byte>.subArray(data, writtenBytes, data.Length));
             node.LastDataIndex = res.LastDataIndex;
-
             return res.Sectors;
         }
 
