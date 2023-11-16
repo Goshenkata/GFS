@@ -25,7 +25,6 @@ public class FilesystemData : StreamArray
     {
         var data = SerializeFs();
         _fs.Seek(_dataStart, SeekOrigin.Begin);
-        //todo replace with my own methods
         _bw.Write(data);
         _bw.Flush();
     }

@@ -8,13 +8,7 @@ public class FileSystemManager
 {
     public const string DataFilepath = "GFS.data";
 
-    private string _currentPath = "/";
-
-    public string CurrentPath
-    {
-        get => _currentPath;
-        set => _currentPath = value;
-    }
+    public string CurrentPath { get; set; } = "/";
 
     private FilesystemData _fsData;
     private SectorData _sectorData;
@@ -25,6 +19,7 @@ public class FileSystemManager
 
     private int _sectorSizeInBytes;
     private long _maxFsSizeInBytes;
+    private const long FsDataOffset = sizeof(long) + sizeof(int) + sizeof(int);
 
     public bool IsInit()
     {
@@ -36,7 +31,6 @@ public class FileSystemManager
         _maxFsSizeInBytes = maxSize;
         _sectorSizeInBytes = sectorSize;
         long sectorOffset = maxSize / 10;
-        long fsDataOffset = sizeof(long) + sizeof(int);
 
         //write and read maxFsSizeInBytes and sectorSize, init length;
         _fs = File.Open(DataFilepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
@@ -46,8 +40,9 @@ public class FileSystemManager
         _bw.Seek(0, SeekOrigin.Begin);
         _bw.Write(_maxFsSizeInBytes);
         _bw.Write(_sectorSizeInBytes);
+        _bw.Write(0);
 
-        _fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
+        _fsData = new FilesystemData(FsDataOffset, sectorOffset, _fs, _bw, _br);
         _fsData.InitTestData();
         _fsData.WriteMetadata();
         _fsData.LoadFs();
@@ -65,9 +60,8 @@ public class FileSystemManager
         _fs.Seek(0, SeekOrigin.Begin);
         _maxFsSizeInBytes = _br.ReadInt64();
         _sectorSizeInBytes = _br.ReadInt32();
-        long fsDataOffset = sizeof(long) + sizeof(int);
         long sectorOffset = _maxFsSizeInBytes / 10;
-        _fsData = new FilesystemData(fsDataOffset, sectorOffset, _fs, _bw, _br);
+        _fsData = new FilesystemData(FsDataOffset, sectorOffset, _fs, _bw, _br);
         _fsData.LoadFs();
 
         _sectorData = new SectorData(sectorOffset + 1, _maxFsSizeInBytes, _fs, _bw, _br, _sectorSizeInBytes);
@@ -108,6 +102,7 @@ public class FileSystemManager
         }
     }
 
+
     public bool AppendToFile(string filePath, byte[] data)
     {
         var node = _fsData.GetNodeByPath(filePath);
@@ -139,6 +134,7 @@ public class FileSystemManager
             node.LastDataIndex = writeFileDto.LastDataIndex;
         }
 
+
         _fsData.WriteMetadata();
         return true;
     }
@@ -148,7 +144,7 @@ public class FileSystemManager
         var node = _fsData.GetNodeByPath(path);
         if (node != null)
         {
-            return Encoding.UTF8.GetString(_sectorData.readFile(node));
+            return Encoding.UTF8.GetString(_sectorData.ReadFile(node));
         }
 
         return string.Empty;
@@ -174,7 +170,7 @@ public class FileSystemManager
     {
         using var bw = new BinaryWriter(File.Open(destinationOnDisk, FileMode.OpenOrCreate, FileAccess.Write));
         var node = _fsData.GetNodeByPath(sourceFromFs);
-        var data = _sectorData.readFile(node);
+        var data = _sectorData.ReadFile(node);
         bw.Write(data);
 
         return true;
@@ -198,6 +194,7 @@ public class FileSystemManager
 
     public void PrintSectorInfo(int sector)
     {
+        Console.WriteLine("last written sector: " + _sectorData.getLastWrittenSector());
         Console.WriteLine(_sectorData.GetSector(sector));
     }
 }

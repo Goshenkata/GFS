@@ -125,7 +125,7 @@ public class Program
         }
     }
 
-    //todo only for debug, remove
+    //only for debug purposes
     private static bool SectorCommand(string[] command, FileSystemManager fileSystemManager)
     {
         int sector = int.Parse(command[1]);
