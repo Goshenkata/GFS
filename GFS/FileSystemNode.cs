@@ -104,11 +104,11 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
         }
     }
 
-    public bool Equals(FileSystemNode x, FileSystemNode y)
+    public bool Equals(FileSystemNode node)
     {
-        if (x == null || y == null)
+        if ( node == null)
             return false;
 
-        return x.Name == y.Name && x.IsDirectory == y.IsDirectory && x.Path == y.Path;
+        return Name == node.Name && IsDirectory == node.IsDirectory && Path == node.Path;
     }
 }

@@ -216,6 +216,19 @@ public class MyList<T> : IEnumerable<T>
         head = newHead;
         count--;
     }
+
+    public bool Contains(T value)
+    {
+        foreach (var v in this)
+        {
+            if (EqualityComparer<T>.Default.Equals(v, value))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 internal class Node<T>

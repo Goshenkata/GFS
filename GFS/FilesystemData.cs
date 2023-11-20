@@ -5,6 +5,8 @@ namespace GFS;
 
 public class FilesystemData : StreamArray
 {
+    public FileSystemNode _root;
+
     public void InitTestData()
     {
         var sub1 = new FileSystemNode("/", "sub1", true);
@@ -53,8 +55,8 @@ public class FilesystemData : StreamArray
             for (int i = 4; i < split.Length; i++)
             {
                 sectors[i - 4] = int.Parse(split[i]);
-
             }
+
             CreateNode(split[0], split[1], bool.Parse(split[2]), sectors, int.Parse(split[3]));
         }
     }
@@ -101,12 +103,23 @@ public class FilesystemData : StreamArray
         return node != null && node.IsDirectory;
     }
 
+    public bool sectorHasDuplicates(int sectorId, FileSystemNode toSkip)
+    {
+        foreach (var node in _root)
+        {
+            if (node.IsDirectory) continue;
+            if (node.Equals(toSkip)) continue;
+            if (node.SectorIds.Contains(sectorId))
+                return true;
+        }
+        return false;
+    }
+
     public void LoadFs()
     {
         _fs.Seek(_dataStart, SeekOrigin.Begin);
         var deserialized = _br.ReadString();
         DeserializeFs(deserialized);
-        
     }
 
     public void PrintTree()
@@ -139,12 +152,14 @@ public class FilesystemData : StreamArray
     }
 
     public FilesystemData(long dataStart, long dataEnd, Stream fs, BinaryWriter bw, BinaryReader br) : base(dataStart,
-        dataEnd, fs, bw, br) { }
+        dataEnd, fs, bw, br)
+    {
+        _root = new FileSystemNode("/", "root", true);
+    }
 
     public bool FileExists(string path)
     {
         var node = GetNodeByPath(path);
         return node != null && !node.IsDirectory;
     }
-
 }
