@@ -145,6 +145,8 @@ public class FileSystemManager
     {
         var node = _fsData.GetNodeByPath(filePath);
         var writeFileDto = _sectorData.WriteFile(data);
+        if (writeFileDto.IsCorrupted)
+            return false;
         if (node == null)
         {
             string fileName;
@@ -195,7 +197,7 @@ public class FileSystemManager
 
     public bool Export(string sourceFromFs, string destinationOnDisk)
     {
-        using var bw = new BinaryWriter(File.Open(destinationOnDisk, FileMode.OpenOrCreate, FileAccess.Write));
+        using var bw = new BinaryWriter(File.Open(destinationOnDisk, FileMode.Create, FileAccess.Write));
         var node = _fsData.GetNodeByPath(sourceFromFs);
         var data = _sectorData.ReadFile(node);
         bw.Write(data);

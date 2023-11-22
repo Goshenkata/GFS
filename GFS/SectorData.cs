@@ -119,12 +119,24 @@ public class SectorData : StreamArray
             }
 
             //go to the free data section of the array
-            _fs.Seek(GetStartOfDataIndex(sector), SeekOrigin.Begin);
+            var startOfDataIndex = GetStartOfDataIndex(sector);
+            _fs.Seek(startOfDataIndex, SeekOrigin.Begin);
             _bw.Write(subData);
+            
+            //check if the data has been written correctly
+            _fs.Seek(startOfDataIndex, SeekOrigin.Begin);
+            var writtenDataHash = ComputeDataHash(_br.ReadBytes(count));
+            if (writtenDataHash != hash)
+            {
+                Console.WriteLine(Messages.CorruptedSector);
+                Free(sectorIds);
+                return new WriteFileDto(Array.Empty<int>(), 0, true);
+            }
 
             //write the hash
             _fs.Seek(GetStartOfSectorIndex(sector) + sizeof(bool), SeekOrigin.Begin);
             _bw.Write(hash);
+            
         }
 
 
@@ -314,4 +326,6 @@ public class SectorData : StreamArray
 
         return hash;
     }
+    
+    
 }
