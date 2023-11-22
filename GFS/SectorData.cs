@@ -9,7 +9,8 @@ public class SectorData : StreamArray
     private int _dataSize;
     private int _lastSectorId;
 
-    public SectorData(long dataStart, long dataEnd, Stream fs, BinaryWriter bw, BinaryReader br, int sectorSize) : base(
+    public SectorData(long dataStart, long dataEnd, FileStream fs, BinaryWriter bw, BinaryReader br,
+        int sectorSize) : base(
         dataStart, dataEnd, fs, bw, br)
     {
         _sectorSize = sectorSize;
@@ -39,8 +40,13 @@ public class SectorData : StreamArray
         return _dataStart + sectorId * _sectorSize + (_sectorSize - _dataSize);
     }
 
-    public SectorNode GetSector(int sectorId)
+    public SectorNode GetSector(int sectorId, bool flush = false)
     {
+        if (flush)
+        {
+            Flush();
+        }
+
         _fs.Seek(GetStartOfSectorIndex(sectorId), SeekOrigin.Begin);
         SectorNode sectorNode = new SectorNode();
         sectorNode.IsTaken = _br.ReadBoolean();
@@ -48,6 +54,16 @@ public class SectorData : StreamArray
         sectorNode.data = _br.ReadBytes(_dataSize);
         return sectorNode;
     }
+
+    public SectorMetadataDTO GetSectorMetaData(int sectorId)
+    {
+        _fs.Seek(GetStartOfSectorIndex(sectorId), SeekOrigin.Begin);
+        var sectorNode = new SectorMetadataDTO();
+        sectorNode.IsTaken = _br.ReadBoolean();
+        sectorNode.Hash = _br.ReadInt64();
+        return sectorNode;
+    }
+
 
     private int TakeNextAvalableSector()
     {
@@ -144,7 +160,16 @@ public class SectorData : StreamArray
         for (var index = 0; index < node.SectorIds.Count - 1; index++)
         {
             var sectorId = node.SectorIds[index];
-            var sector = GetSector(sectorId);
+            var sector = GetSector(sectorId, true);
+
+            //check if the sector is corrupted
+            if (sector.hash != ComputeDataHash(sector.data))
+            {
+                Console.WriteLine(Messages.CorruptedSector);
+                node.IsCorrupted = true;
+                return Array.Empty<byte>();
+            }
+
             if (!sector.IsTaken)
                 Console.Error.WriteLine("Reading from free sector");
 
@@ -155,12 +180,20 @@ public class SectorData : StreamArray
             }
         }
 
+        var lastSector = GetSector(node.SectorIds[^1], true);
+        byte[] lastSectorData = new byte[node.LastDataIndex];
         for (int i = 0; i < node.LastDataIndex; i++)
         {
-            var sector = GetSector(node.SectorIds[^1]);
-            if (!sector.IsTaken)
+            if (!lastSector.IsTaken)
                 Console.Error.WriteLine("Reading from free sector");
-            data[lastId++] = sector.data[i];
+            data[lastId++] = lastSector.data[i];
+            lastSectorData[i] = lastSector.data[i];
+        }
+
+        if (lastSector.hash != ComputeDataHash(lastSectorData))
+        {
+            Console.Error.WriteLine($"Sector {node.SectorIds[^1]} is corrupted");
+            return Array.Empty<byte>();
         }
 
         return data;
@@ -182,7 +215,7 @@ public class SectorData : StreamArray
         var lastWrittenSector = getLastWrittenSector();
         if (sectorId == lastWrittenSector)
         {
-            for (int i = lastWrittenSector - 1; i >= 0; i-- )
+            for (int i = lastWrittenSector - 1; i >= 0; i--)
             {
                 _fs.Seek(GetStartOfSectorIndex(i), SeekOrigin.Begin);
                 var isTaken = _br.ReadBoolean();
@@ -198,7 +231,7 @@ public class SectorData : StreamArray
     public int[] AppendToFile(byte[] data, ref FileSystemNode node)
     {
         var lastSectorId = node.SectorIds[^1];
-        var lastSector = GetSector(lastSectorId);
+        var lastSector = GetSector(lastSectorId, true);
         int remaining = _dataSize - node.LastDataIndex;
 
         var currentData = ArrayHelper<byte>.subArray(lastSector.data, 0, node.LastDataIndex);
@@ -208,8 +241,14 @@ public class SectorData : StreamArray
         var writtenBytes = Math.Min(data.Length, remaining);
         node.LastDataIndex += writtenBytes;
 
+        var preAppendHash = ComputeDataHash(currentData);
+        if (preAppendHash != lastSector.hash)
+        {
+            Console.WriteLine(Messages.CorruptedSector);
+            node.IsCorrupted = true;
+            return Array.Empty<int>();
+        }
 
-        //see if after modifying the data
         {
             var afterAppendHash = ComputeDataHash(fullNewData);
             var repeatSector = GetSectorIdWithSameHash(afterAppendHash);
@@ -221,7 +260,6 @@ public class SectorData : StreamArray
             }
             else
             {
-                var preAppendHash = ComputeDataHash(currentData);
                 var sharedSector = GetSectorIdWithSameHash(preAppendHash);
 
                 //if the sector is shared

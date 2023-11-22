@@ -13,7 +13,7 @@ public class FileSystemManager
     private FilesystemData _fsData;
     private SectorData _sectorData;
 
-    private Stream _fs;
+    private FileStream _fs;
     private BinaryWriter _bw;
     private BinaryReader _br;
 
@@ -34,7 +34,7 @@ public class FileSystemManager
         long sectorOffset = maxSize / 10;
 
         //write and read maxFsSizeInBytes and sectorSize, init length;
-        _fs = File.Open(DataFilepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        _fs = new FileStream(DataFilepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
         _bw = new BinaryWriter(_fs);
         _br = new BinaryReader(_fs);
         _fs.SetLength(_maxFsSizeInBytes);
@@ -54,7 +54,7 @@ public class FileSystemManager
 
     public void LoadFs()
     {
-        _fs = File.Open(DataFilepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        _fs = new FileStream(DataFilepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
         _bw = new BinaryWriter(_fs);
         _br = new BinaryReader(_fs);
 
@@ -89,7 +89,6 @@ public class FileSystemManager
                 }
             }
         }
-
     }
 
 
@@ -132,6 +131,7 @@ public class FileSystemManager
     {
         var node = _fsData.GetNodeByPath(filePath);
         int[] newSectors = _sectorData.AppendToFile(data, ref node);
+        _fsData.Flush();
         if (newSectors.Length > 0)
         {
             node.SectorIds.AddLast(newSectors);
@@ -169,7 +169,9 @@ public class FileSystemManager
         var node = _fsData.GetNodeByPath(path);
         if (node != null)
         {
-            return Encoding.UTF8.GetString(_sectorData.ReadFile(node));
+            var output = Encoding.UTF8.GetString(_sectorData.ReadFile(node));
+            _fsData.Flush();
+            return output;
         }
 
         return string.Empty;
@@ -204,7 +206,6 @@ public class FileSystemManager
     public void RmFile(string path)
     {
         var file = _fsData.GetNodeByPath(path);
-        _sectorData.Free(file.SectorIds.ToArray());
         var parent = _fsData.GetNodeByPath(StringHelper.GetParentPath(path));
         for (var index = 0; index < parent.Children.Count; index++)
         {
@@ -213,11 +214,10 @@ public class FileSystemManager
                 parent.Children.RemoveAt(index);
             }
         }
-        
+
         //free sectors
         foreach (var sectorId in file.SectorIds)
         {
-            var sector = _sectorData.GetSector(sectorId);
             //Free if the sector does not have duplicates, skip itself
             if (!_fsData.sectorHasDuplicates(sectorId, file))
             {

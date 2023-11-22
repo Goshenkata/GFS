@@ -10,16 +10,18 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
     public string Name { get; set; }
     public bool IsDirectory { get; }
     public string Path { get; }
+    public bool IsCorrupted { get; set; }
     public MyList<FileSystemNode> Children { get; set; } = new();
     public MyList<int> SectorIds { get; set; } = new();
     public int LastDataIndex { get; set; } = 0;
 
-    public FileSystemNode(string path, string name, bool isDirectory, int lastDataIndex = 0)
+    public FileSystemNode(string path, string name, bool isDirectory, int lastDataIndex = 0, bool isCorrupted = false)
     {
         Name = name;
         Path = path;
         IsDirectory = isDirectory;
         LastDataIndex = lastDataIndex;
+        IsCorrupted = isCorrupted;
     }
 
     public string Serialize()
@@ -28,6 +30,7 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
         output.Append(Path + " ");
         output.Append(Name + " ");
         output.Append(IsDirectory + " ");
+        output.Append(IsCorrupted + " ");
         output.Append(LastDataIndex + " ");
         if (!IsDirectory)
         {
@@ -77,7 +80,7 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
 
     public override string ToString()
     {
-        return $"{Path} {Name} {IsDirectory}";
+        return $"{Path} {Name} {IsDirectory} {IsCorrupted}";
     }
 
     public string getLsFormat()
@@ -96,7 +99,7 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
         string indentation = new string('-', level * 2);
 
         var sectors = IsDirectory ? "" : SectorIds.ToString();
-        Console.WriteLine(indentation + Name + " " + IsDirectory + " " +LastDataIndex + " " + sectors);
+        Console.WriteLine(indentation + Name + " " + IsDirectory + " " + LastDataIndex + " " + IsCorrupted + sectors);
 
         foreach (var child in Children)
         {
@@ -106,7 +109,7 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
 
     public bool Equals(FileSystemNode node)
     {
-        if ( node == null)
+        if (node == null)
             return false;
 
         return Name == node.Name && IsDirectory == node.IsDirectory && Path == node.Path;
