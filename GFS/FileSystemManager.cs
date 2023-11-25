@@ -1,3 +1,4 @@
+using GFS.DTO;
 using GFS.helper;
 using GFS.Structures;
 using System.Text;
@@ -117,13 +118,15 @@ public class FileSystemManager
         _fsData.Rmdir(parentPath, dirName);
     }
 
-    public void Ls(string path)
+    public MyList<FileLs> Ls(string path)
     {
         var currentDir = _fsData.GetNodeByPath(path);
+        var  output = new MyList<FileLs>();
         foreach (var child in currentDir.Children)
         {
-            Console.WriteLine(child.getLsFormat());
+            output.AddLast(new FileLs { Name = child.Name, IsDirectory = child.IsDirectory });
         }
+        return output;
     }
 
 

@@ -1,5 +1,7 @@
-﻿using GFS.enums;
+﻿using GFS.DTO;
+using GFS.enums;
 using GFS.helper;
+using GFS.Structures;
 using System.Text;
 
 namespace GFS;
@@ -97,16 +99,20 @@ public class Program
             case "ls":
                 if (command.Length == 1)
                 {
-                    fileSystemManager.Ls(fileSystemManager.CurrentPath);
+                    var data = fileSystemManager.Ls(fileSystemManager.CurrentPath);
+                    foreach (var item in data) 
+                        Console.WriteLine(item);
                     return true;
                 }
 
                 if (command[1] == "/")
                 {
-                    fileSystemManager.Ls("/");
+                    var data = fileSystemManager.Ls("/");
+                    foreach (var item in data) 
+                        Console.WriteLine(item);
+
                     return true;
                 }
-
                 return DirectoryCommand(command, fileSystemManager, enums.DirectoryCommand.Ls);
             case "rm":
                 return RmCommand(command, fileSystemManager);
@@ -375,7 +381,8 @@ public class Program
                         return false;
                     }
 
-                    fileSystemManager.Ls(dirPath);
+                    foreach (var item in fileSystemManager.Ls(dirPath))
+                        Console.WriteLine(item);
                     return true;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(directoryCommand), directoryCommand, null);

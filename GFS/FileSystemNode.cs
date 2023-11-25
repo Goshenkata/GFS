@@ -81,12 +81,6 @@ public class FileSystemNode : IEnumerable<FileSystemNode>
         return $"{Path} {Name} {IsDirectory} {IsCorrupted}";
     }
 
-    public string getLsFormat()
-    {
-        var type = IsDirectory ? "D" : "F";
-        return $"{Name} :{type}";
-    }
-
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();

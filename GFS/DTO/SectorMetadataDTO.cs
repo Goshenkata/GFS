@@ -1,4 +1,4 @@
-namespace GFS;
+namespace GFS.DTO;
 
 public class SectorMetadataDTO
 {

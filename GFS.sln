@@ -1,6 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GFS", "GFS\GFS.csproj", "{0AEABF11-034A-4AB5-9462-AACF7BC2B7B2}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34316.72
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GFS", "GFS\GFS.csproj", "{0AEABF11-034A-4AB5-9462-AACF7BC2B7B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GFSGUI", "GFSGUI\GFSGUI.csproj", "{12B46DF0-C7BC-4970-8981-537BAA9E8287}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +17,15 @@ Global
 		{0AEABF11-034A-4AB5-9462-AACF7BC2B7B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0AEABF11-034A-4AB5-9462-AACF7BC2B7B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0AEABF11-034A-4AB5-9462-AACF7BC2B7B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12B46DF0-C7BC-4970-8981-537BAA9E8287}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12B46DF0-C7BC-4970-8981-537BAA9E8287}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12B46DF0-C7BC-4970-8981-537BAA9E8287}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12B46DF0-C7BC-4970-8981-537BAA9E8287}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F0F9294E-388A-4EE4-81D3-E1B05B0E0DFE}
 	EndGlobalSection
 EndGlobal
