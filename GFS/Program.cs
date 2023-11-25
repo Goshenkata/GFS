@@ -1,7 +1,6 @@
-﻿using System.Text;
-using GFS.enums;
+﻿using GFS.enums;
 using GFS.helper;
-using GFS.Structures;
+using System.Text;
 
 namespace GFS;
 
@@ -146,7 +145,7 @@ public class Program
         {
             Console.WriteLine(Messages.FileDoesNotExist);
             return false;
-        } 
+        }
         fileSystemManager.RmFile(path);
         return true;
     }

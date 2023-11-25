@@ -55,7 +55,7 @@ public class MyStringBuilder
 
     public void Append(int n)
     {
-        Append((char) (n + 32));
+        Append((char)(n + 32));
     }
 
     public bool IsEmpty()

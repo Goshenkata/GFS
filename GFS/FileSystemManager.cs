@@ -1,6 +1,6 @@
-using System.Text;
 using GFS.helper;
 using GFS.Structures;
+using System.Text;
 
 namespace GFS;
 
@@ -131,7 +131,9 @@ public class FileSystemManager
     {
         var node = _fsData.GetNodeByPath(filePath);
         int[] newSectors = _sectorData.AppendToFile(data, ref node);
-        _fsData.Flush();
+            _fsData._fs = _sectorData._fs;
+            _fsData._br = _sectorData._br;
+            _fsData._bw = _sectorData._bw;
         if (newSectors.Length > 0)
         {
             node.SectorIds.AddLast(newSectors);
@@ -172,7 +174,9 @@ public class FileSystemManager
         if (node != null)
         {
             var output = Encoding.UTF8.GetString(_sectorData.ReadFile(node));
-            _fsData.Flush();
+            _fsData._fs = _sectorData._fs;
+            _fsData._br = _sectorData._br;
+            _fsData._bw = _sectorData._bw;
             return output;
         }
 

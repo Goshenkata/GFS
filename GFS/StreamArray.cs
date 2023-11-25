@@ -2,9 +2,9 @@ namespace GFS;
 
 public abstract class StreamArray
 {
-    protected BinaryWriter _bw;
-    protected FileStream _fs;
-    protected BinaryReader _br;
+    public BinaryWriter _bw;
+    public FileStream _fs;
+    public BinaryReader _br;
     protected long _dataStart;
     private long _dataEnd;
 
@@ -21,11 +21,18 @@ public abstract class StreamArray
 
     public void Flush()
     {
-        _br.Close();
-        _bw.Close();
-        _fs.Close();
-        _fs = new FileStream(FileSystemManager.DataFilepath, FileMode.Open, FileAccess.ReadWrite);
-        _br = new BinaryReader(_fs);
-        _bw = new BinaryWriter(_fs);
+        try
+        {
+            _fs.Flush();
+            _br.Close();
+            _bw.Close();
+            _fs.Close();
+        } catch(Exception e) { }
+        finally
+        {
+            _fs = new FileStream(FileSystemManager.DataFilepath, FileMode.Open, FileAccess.ReadWrite);
+            _br = new BinaryReader(_fs);
+            _bw = new BinaryWriter(_fs);
+        }
     }
 }

@@ -15,7 +15,7 @@ public class CharHelper
     {
         return isUppercaseLetter(c) || isLowercaseLetter(c);
     }
-    
+
     public static bool isDigit(char c)
     {
         return c is >= '0' and <= '9';

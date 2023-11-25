@@ -8,7 +8,7 @@ public class MyQueue<T>
     {
         _list.AddLast(data);
     }
-    
+
     public T Dequeue()
     {
         var output = _list.GetFirst();

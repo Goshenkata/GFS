@@ -1,5 +1,4 @@
 using GFS.helper;
-using GFS.Structures;
 
 namespace GFS;
 
@@ -122,7 +121,7 @@ public class SectorData : StreamArray
             var startOfDataIndex = GetStartOfDataIndex(sector);
             _fs.Seek(startOfDataIndex, SeekOrigin.Begin);
             _bw.Write(subData);
-            
+
             //check if the data has been written correctly
             _fs.Seek(startOfDataIndex, SeekOrigin.Begin);
             var writtenDataHash = ComputeDataHash(_br.ReadBytes(count));
@@ -136,7 +135,7 @@ public class SectorData : StreamArray
             //write the hash
             _fs.Seek(GetStartOfSectorIndex(sector) + sizeof(bool), SeekOrigin.Begin);
             _bw.Write(hash);
-            
+
         }
 
 
@@ -326,6 +325,6 @@ public class SectorData : StreamArray
 
         return hash;
     }
-    
-    
+
+
 }
