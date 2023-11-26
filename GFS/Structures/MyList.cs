@@ -203,7 +203,12 @@ public class MyList<T> : IEnumerable<T>
 
     public void RemoveLast()
     {
-        var newTail = this.tail.Prev;
+
+        Node<T> newTail;
+        if (this.tail.Prev == null)
+            newTail = head;
+        else
+            newTail = this.tail.Prev;
         tail.Prev = null;
         tail = newTail;
         count--;
@@ -228,6 +233,13 @@ public class MyList<T> : IEnumerable<T>
         }
 
         return false;
+    }
+
+    public void Clear()
+    {
+        count = 0;
+        head = null;
+        tail = null;
     }
 }
 

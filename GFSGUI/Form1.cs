@@ -6,7 +6,19 @@ namespace GFSGUI
     public partial class Form1 : Form
     {
         FileSystemManager _fsManager;
-        
+        MyStack<string> prevStack = new MyStack<string>();
+        MyStack<string> forwardStack = new MyStack<string>();
+
+        private void UpdateHistoryButtonsState()
+        {
+            if (prevStack.isEmpty())
+                goBackButton.Enabled = false;
+            else goBackButton.Enabled = true;
+
+            if (forwardStack.isEmpty())
+                forwardButton.Enabled = false;
+            else forwardButton.Enabled = true;
+        }
         public Form1()
         {
             InitializeComponent();
@@ -32,11 +44,61 @@ namespace GFSGUI
             foreach (var item in data)
                 if (!item.IsDirectory)
                     sorted.AddLast(item);
+            listView1.Items.Clear();
             foreach (var item in sorted)
             {
                 ListViewItem listViewItem = new ListViewItem(item.Name);
+                listViewItem.ImageIndex = ResolveImageId(item);
+                Font font = new Font(FontFamily.GenericSansSerif, 14);
+                listViewItem.Font = font;
                 listView1.Items.Add(listViewItem);
             }
+        }
+
+        private int ResolveImageId(FileLs item)
+        {
+            if (item.IsDirectory)
+            {
+                return !item.IsCorrupted ? 0 : 1;
+            }
+            return !item.IsCorrupted ? 2 : 3;
+        }
+
+        private void listView1_ItemActivate(object sender, EventArgs e)
+        {
+            string selectedItemName = listView1.SelectedItems[0].Text;
+            var delimiter = _fsManager.CurrentPath[^1] != '/' ? "/" : "";
+            string fullPath = _fsManager.CurrentPath + "/" + selectedItemName;
+            if (_fsManager.GetNode(fullPath)!.IsDirectory)
+            {
+                prevStack.Push(_fsManager.CurrentPath);
+                forwardStack.Clear();
+                _fsManager.CurrentPath = fullPath;
+                UpdateListView();
+                UpdateHistoryButtonsState();
+            }
+            else
+            {
+                TextEditor textEditor = new TextEditor(_fsManager, fullPath);
+                textEditor.Show();
+            }
+        }
+
+        private void goBackButton_Click(object sender, EventArgs e)
+        {
+            forwardStack.Push(_fsManager.CurrentPath);
+            _fsManager.CurrentPath = prevStack.Pop();
+            UpdateListView();
+            UpdateHistoryButtonsState();
+        }
+
+        private void forwardButton_Click(object sender, EventArgs e)
+        {
+            prevStack.Push(_fsManager.CurrentPath);
+            _fsManager.CurrentPath = forwardStack.Pop();
+            UpdateListView();
+            UpdateHistoryButtonsState();
+
         }
     }
 }

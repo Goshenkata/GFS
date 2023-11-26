@@ -124,9 +124,13 @@ public class FileSystemManager
         var  output = new MyList<FileLs>();
         foreach (var child in currentDir.Children)
         {
-            output.AddLast(new FileLs { Name = child.Name, IsDirectory = child.IsDirectory });
+            output.AddLast(new FileLs { Name = child.Name, IsDirectory = child.IsDirectory, IsCorrupted = child.IsCorrupted });
         }
         return output;
+    }
+    public FileSystemNode? GetNode(string fullpath)
+    {
+        return _fsData.GetNodeByPath(fullpath);
     }
 
 

@@ -10,6 +10,7 @@ namespace GFS.DTO
     {
         public string Name;
         public bool IsDirectory;
+        public bool IsCorrupted;
 
         public override string? ToString()
         {
