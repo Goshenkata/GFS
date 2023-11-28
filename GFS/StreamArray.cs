@@ -27,7 +27,8 @@ public abstract class StreamArray
             _br.Close();
             _bw.Close();
             _fs.Close();
-        } catch(Exception e) { }
+        }
+        catch (Exception e) { }
         finally
         {
             _fs = new FileStream(FileSystemManager.DataFilepath, FileMode.Open, FileAccess.ReadWrite);

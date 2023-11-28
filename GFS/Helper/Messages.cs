@@ -41,4 +41,5 @@ public static class Messages
     public const string InvalidDirName = "Invalid directory name";
     public const string DirectoryIsNotEmpty = "Directory is not empty";
     public const string CorruptedSector = "Detected corrupted sector..";
+    public const string CreateDir = "Create Directory";
 }

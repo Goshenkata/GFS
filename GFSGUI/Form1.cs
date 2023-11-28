@@ -1,5 +1,6 @@
 using GFS;
 using GFS.DTO;
+using GFS.helper;
 using GFS.Structures;
 namespace GFSGUI
 {
@@ -99,6 +100,13 @@ namespace GFSGUI
             UpdateListView();
             UpdateHistoryButtonsState();
 
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            InputForm inputForm = new InputForm(Messages.CreateDir, _fsManager);
+            inputForm.ShowDialog();
+            UpdateListView();
         }
     }
 }

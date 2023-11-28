@@ -1,7 +1,5 @@
-﻿using GFS.DTO;
-using GFS.enums;
+﻿using GFS.enums;
 using GFS.helper;
-using GFS.Structures;
 using System.Text;
 
 namespace GFS;
@@ -100,7 +98,7 @@ public class Program
                 if (command.Length == 1)
                 {
                     var data = fileSystemManager.Ls(fileSystemManager.CurrentPath);
-                    foreach (var item in data) 
+                    foreach (var item in data)
                         Console.WriteLine(item);
                     return true;
                 }
@@ -108,7 +106,7 @@ public class Program
                 if (command[1] == "/")
                 {
                     var data = fileSystemManager.Ls("/");
-                    foreach (var item in data) 
+                    foreach (var item in data)
                         Console.WriteLine(item);
 
                     return true;
@@ -335,21 +333,11 @@ public class Program
             switch (directoryCommand)
             {
                 case enums.DirectoryCommand.Mkdir:
-
-                    if (!StringHelper.IsValidNodeName(dirName))
+                    var mkdirResult = fileSystemManager.Mkdir(parentPath, dirName);
+                    if (!mkdirResult.Success)
                     {
-                        Console.Error.WriteLine(Messages.InvalidDirName);
-                        return false;
+                        Console.WriteLine(mkdirResult.Message);
                     }
-
-                    //cannot create a directory taht already exists
-                    if (fileSystemManager.DirExists(parentPath + dirName))
-                    {
-                        Console.Error.WriteLine(Messages.DirExists);
-                        return false;
-                    }
-
-                    fileSystemManager.Mkdir(parentPath, dirName);
                     break;
                 case enums.DirectoryCommand.Rmdir:
 

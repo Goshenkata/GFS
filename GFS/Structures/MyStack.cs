@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GFS.Structures
+﻿namespace GFS.Structures
 {
     public class MyStack<T>
     {
         MyList<T> data = new MyList<T>();
-        public int Count { get { return data.Count; } } 
+        public int Count { get { return data.Count; } }
         public T Pop()
         {
             var output = data.GetLast();

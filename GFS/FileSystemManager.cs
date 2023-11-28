@@ -93,9 +93,21 @@ public class FileSystemManager
     }
 
 
-    public void Mkdir(string parentPath, string dirName)
+    public OperationResult Mkdir(string parentPath, string dirName)
     {
+        if (!StringHelper.IsValidNodeName(dirName))
+        {
+            return new OperationResult() { Success = false, Message = Messages.InvalidDirName };
+                    }
+
+        if (DirExists(parentPath + dirName))
+        {
+            Console.Error.WriteLine(Messages.DirExists);
+            return new OperationResult() { Success = false, Message = Messages.DirExists };
+        }
+
         _fsData.Mkdir(parentPath, dirName);
+        return new OperationResult() { Success = true, Message = "" };
     }
 
     public void PrintTree()
@@ -121,7 +133,7 @@ public class FileSystemManager
     public MyList<FileLs> Ls(string path)
     {
         var currentDir = _fsData.GetNodeByPath(path);
-        var  output = new MyList<FileLs>();
+        var output = new MyList<FileLs>();
         foreach (var child in currentDir.Children)
         {
             output.AddLast(new FileLs { Name = child.Name, IsDirectory = child.IsDirectory, IsCorrupted = child.IsCorrupted });
@@ -138,9 +150,9 @@ public class FileSystemManager
     {
         var node = _fsData.GetNodeByPath(filePath);
         int[] newSectors = _sectorData.AppendToFile(data, ref node);
-            _fsData._fs = _sectorData._fs;
-            _fsData._br = _sectorData._br;
-            _fsData._bw = _sectorData._bw;
+        _fsData._fs = _sectorData._fs;
+        _fsData._br = _sectorData._br;
+        _fsData._bw = _sectorData._bw;
         if (newSectors.Length > 0)
         {
             node.SectorIds.AddLast(newSectors);

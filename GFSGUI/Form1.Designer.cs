@@ -43,6 +43,7 @@
             listView1 = new ListView();
             imageList1 = new ImageList(components);
             treeView1 = new TreeView();
+            button1 = new Button();
             tableLayoutPanel1.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
             SuspendLayout();
@@ -71,6 +72,7 @@
             tableLayoutPanel1.SetColumnSpan(flowLayoutPanel1, 2);
             flowLayoutPanel1.Controls.Add(goBackButton);
             flowLayoutPanel1.Controls.Add(forwardButton);
+            flowLayoutPanel1.Controls.Add(button1);
             flowLayoutPanel1.Dock = DockStyle.Fill;
             flowLayoutPanel1.Location = new Point(3, 3);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
@@ -154,6 +156,16 @@
             treeView1.Size = new Size(190, 473);
             treeView1.TabIndex = 2;
             // 
+            // button1
+            // 
+            button1.Location = new Point(85, 3);
+            button1.Name = "button1";
+            button1.Size = new Size(63, 35);
+            button1.TabIndex = 2;
+            button1.Text = "mkdir";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -177,5 +189,6 @@
         private Button goBackButton;
         private Button forwardButton;
         private ImageList imageList2;
+        private Button button1;
     }
 }
