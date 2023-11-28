@@ -108,5 +108,25 @@ namespace GFSGUI
             inputForm.ShowDialog();
             UpdateListView();
         }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            var dialogResult = openFileDialog1.ShowDialog();
+
+            if (dialogResult == DialogResult.OK)
+            {
+                for (int i = 0;i < openFileDialog1.FileNames.Length; i++)
+                {
+                    var fullPath = openFileDialog1.FileNames[i];
+                    var fileName = openFileDialog1.SafeFileNames[i];
+                    var delimiter = _fsManager.CurrentPath[^1] == '/' ? "" : "/";
+                    var myPath = _fsManager.CurrentPath + delimiter + fileName;
+                    //todo add validation
+                    _fsManager.ImportFile(fullPath, myPath, false);
+                }
+                UpdateListView();
+            }
+        }
+
     }
 }

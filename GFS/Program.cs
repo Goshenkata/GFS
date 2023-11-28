@@ -76,7 +76,7 @@ public class Program
             case "create":
                 if (command.Length == 1)
                 {
-                    command = new[] { "create", "2", "MB", "8" };
+                    command = new[] { "create", "10", "GB", "8" };
                 }
 
                 return CreateCommand(command, fileSystemManager);
