@@ -38,6 +38,7 @@
             forwardButton = new Button();
             button1 = new Button();
             button2 = new Button();
+            label1 = new Label();
             listView1 = new ListView();
             imageList1 = new ImageList(components);
             treeView1 = new TreeView();
@@ -73,6 +74,7 @@
             flowLayoutPanel1.Controls.Add(forwardButton);
             flowLayoutPanel1.Controls.Add(button1);
             flowLayoutPanel1.Controls.Add(button2);
+            flowLayoutPanel1.Controls.Add(label1);
             flowLayoutPanel1.Dock = DockStyle.Fill;
             flowLayoutPanel1.Location = new Point(3, 3);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
@@ -132,6 +134,15 @@
             button2.UseVisualStyleBackColor = true;
             button2.Click += button2_Click;
             // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(223, 0);
+            label1.Name = "label1";
+            label1.Size = new Size(50, 20);
+            label1.TabIndex = 4;
+            label1.Text = "label1";
+            // 
             // listView1
             // 
             listView1.Dock = DockStyle.Fill;
@@ -146,6 +157,7 @@
             listView1.UseCompatibleStateImageBehavior = false;
             listView1.View = View.Tile;
             listView1.ItemActivate += listView1_ItemActivate;
+            listView1.ItemSelectionChanged += listView1_ItemSelectionChanged;
             // 
             // imageList1
             // 
@@ -173,6 +185,7 @@
             treeView1.TabIndex = 2;
             treeView1.AfterCollapse += treeView1_AfterCollapse;
             treeView1.BeforeExpand += BeforeExpand;
+            treeView1.AfterSelect += treeView1_AfterSelect;
             // 
             // imageList3
             // 
@@ -198,6 +211,7 @@
             Text = "GFS";
             tableLayoutPanel1.ResumeLayout(false);
             flowLayoutPanel1.ResumeLayout(false);
+            flowLayoutPanel1.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -215,5 +229,6 @@
         private Button button2;
         private OpenFileDialog openFileDialog1;
         private ImageList imageList3;
+        private Label label1;
     }
 }

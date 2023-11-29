@@ -98,6 +98,7 @@
             comboBox1.Name = "comboBox1";
             comboBox1.Size = new Size(73, 28);
             comboBox1.TabIndex = 5;
+            comboBox1.Text = "GB";
             // 
             // label3
             // 

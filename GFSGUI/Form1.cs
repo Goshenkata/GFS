@@ -41,6 +41,8 @@ namespace GFSGUI
                 _fsManager.LoadFs();
             }
             InitializeComponent();
+
+            UpdateSelectedNode(_fsManager.GetNode("/"));
             UpdateListView();
             treeView1.Nodes[0].Nodes.Add(new TreeNode());
             LoadTreeView("/");
@@ -55,7 +57,7 @@ namespace GFSGUI
             if (treeNodeToLoad == null)
                 return false;
 
-            if (treeNodeToLoad.ImageIndex == 0 && treeNodeToLoad.Nodes.Count == 1)
+            if (treeNodeToLoad.ImageIndex == 0)
             {
                 treeNodeToLoad.Nodes.Clear();
                 foreach (var child in myFsNode.Children)
@@ -97,15 +99,28 @@ namespace GFSGUI
         }
         private void BeforeExpand(object sender, TreeViewCancelEventArgs e)
         {
+            LoadTreeView(getTreeNodePath(e.Node));
+        }
+
+        private string getTreeNodePath(TreeNode node)
+        {
             MyList<string> pathParts = new MyList<string>();
-            var current = e.Node;
+            var current = node;
             while (current != treeView1.Nodes[0])
             {
                 pathParts.AddFirst(current.Text);
                 current = current.Parent;
             }
-            var path = '/' + StringHelper.Join(pathParts.GetArray(), "/");
-            LoadTreeView(path);
+            var path = StringHelper.Join(pathParts.GetArray(), "/");
+            if (path == "")
+            {
+                path = "/";
+            } 
+            if (path[0] != '/')
+            {
+                path = '/' + path;
+            }
+            return path;
         }
 
         private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
@@ -194,6 +209,7 @@ namespace GFSGUI
             InputForm inputForm = new InputForm(Messages.CreateDir, _fsManager);
             inputForm.ShowDialog();
             UpdateListView();
+            LoadTreeView(_fsManager.CurrentPath);
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -219,6 +235,28 @@ namespace GFSGUI
         {
             e.Node.Nodes.Clear();
             e.Node.Nodes.Add(new TreeNode(""));
+        }
+
+        private void listView1_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            var delimiter = _fsManager.CurrentPath[^1] == '/' ? "" : "/";
+            var newSelectedItemPath = _fsManager.CurrentPath + delimiter + e.Item.Text;
+            UpdateSelectedNode(_fsManager.GetNode(newSelectedItemPath));
+        }
+
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            UpdateSelectedNode(_fsManager.GetNode(getTreeNodePath(e.Node)));
+        }
+        private void UpdateSelectedNode(FileSystemNode node)
+        {
+            if (node != null)
+            {
+                label1.Text = node.ToString();
+            } else
+            {
+                label1.Text = "NULL";
+            }
         }
     }
 }
