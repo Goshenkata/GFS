@@ -28,8 +28,18 @@ public class FileSystemManager
         return File.Exists(DataFilepath);
     }
 
-    public void CreateFilesystem(long maxSize, int sectorSize)
+    public OperationResult CreateFilesystem(long maxSize, int sectorSize)
     {
+        if (IsInit())
+        {
+            return new OperationResult() { Success = false, Message = Messages.FilesystemIsInit };
+        }
+        if ((sectorSize * 16) > maxSize)
+        {
+            return new OperationResult() { Success = false, Message = Messages.Atleast16Sectors };
+        }
+
+
         _maxFsSizeInBytes = maxSize;
         _sectorSizeInBytes = sectorSize;
         long sectorOffset = maxSize / 10;
@@ -50,6 +60,7 @@ public class FileSystemManager
         _fsData.LoadFs();
 
         _sectorData = new SectorData(sectorOffset + 1, maxSize, _fs, _bw, _br, sectorSize);
+        return new OperationResult() { Success = true , Message = ""};
     }
 
 

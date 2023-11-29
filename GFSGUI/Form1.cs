@@ -22,16 +22,29 @@ namespace GFSGUI
         }
         public Form1()
         {
-            InitializeComponent();
-            //todo handle create
             _fsManager = new FileSystemManager();
-            _fsManager.LoadFs();
+            if (!_fsManager.IsInit())
+            {
+                
+                CreateFs d = new CreateFs(_fsManager);
+                DialogResult result = d.ShowDialog();
+                if (result != DialogResult.OK)
+                {
+
+                    Close();
+                    Environment.Exit(-1);
+                    return;
+                }
+            }  else
+            {
+                _fsManager.LoadFs();
+            }
+            InitializeComponent();
             UpdateListView();
         }
 
         private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
         {
-
         }
 
         private void UpdateListView()

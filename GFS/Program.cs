@@ -380,14 +380,7 @@ public class Program
         return true;
     }
 
-    private static bool CreateCommand(string[] command, FileSystemManager fileSystemManager)
-    {
-        if (fileSystemManager.IsInit())
-        {
-            Console.Error.WriteLine("Filesystem is already initialized");
-            return false;
-        }
-
+    private static bool CreateCommand(string[] command, FileSystemManager fileSystemManager) {
         if (command.Length != 4)
         {
             Console.Error.WriteLine(Messages.InvalidArgumentList);
@@ -415,16 +408,15 @@ public class Program
             return false;
         }
 
-        if ((sectorSize * 16) > maxSize)
-        {
-            Console.Error.WriteLine(Messages.Atleast16Sectors);
-            return false;
-        }
-
         //turn kb to bytes;
         maxSize *= 1024;
         sectorSize *= 1024;
-        fileSystemManager.CreateFilesystem(maxSize, sectorSize);
+        var result = fileSystemManager.CreateFilesystem(maxSize, sectorSize);
+        if (!result.Success)
+        {
+            Console.WriteLine(result.Message);
+            return false;
+        }
         return true;
     }
 }

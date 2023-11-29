@@ -42,4 +42,6 @@ public static class Messages
     public const string DirectoryIsNotEmpty = "Directory is not empty";
     public const string CorruptedSector = "Detected corrupted sector..";
     public const string CreateDir = "Create Directory";
+    public const string EnterData = "Enter a data size unit";
+    public const string FilesystemIsInit = "Filesystem is already initialized";
 }
