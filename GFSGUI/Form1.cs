@@ -25,7 +25,7 @@ namespace GFSGUI
             _fsManager = new FileSystemManager();
             if (!_fsManager.IsInit())
             {
-                
+
                 CreateFs d = new CreateFs(_fsManager);
                 DialogResult result = d.ShowDialog();
                 if (result != DialogResult.OK)
@@ -35,12 +35,77 @@ namespace GFSGUI
                     Environment.Exit(-1);
                     return;
                 }
-            }  else
+            }
+            else
             {
                 _fsManager.LoadFs();
             }
             InitializeComponent();
             UpdateListView();
+            treeView1.Nodes[0].Nodes.Add(new TreeNode());
+            LoadTreeView("/");
+        }
+
+        //returns bool if loading children is necessary
+        private bool LoadTreeView(string fullPath)
+        {
+            var myFsNode = _fsManager.GetNode(fullPath);
+            TreeNode treeNodeToLoad = FindTreeNode(fullPath);
+
+            if (treeNodeToLoad == null)
+                return false;
+
+            if (treeNodeToLoad.ImageIndex == 0 && treeNodeToLoad.Nodes.Count == 1)
+            {
+                treeNodeToLoad.Nodes.Clear();
+                foreach (var child in myFsNode.Children)
+                {
+                    TreeNode newNode = new TreeNode(child.Name);
+                    newNode.ImageIndex = ResolveImageId(child);
+                    newNode.SelectedImageIndex = ResolveImageId(child);
+                    if (child.Children.Count > 0)
+                    {
+                        newNode.Nodes.Add(new TreeNode());
+                    }
+                    treeNodeToLoad.Nodes.Add(newNode);
+                }
+            }
+            return true;
+        }
+
+        private TreeNode? FindTreeNode(string fullPath)
+        {
+            var current = treeView1.Nodes[0];
+            if (fullPath == "/")
+            {
+                return current;
+            }
+            string[] path = StringHelper.Split(fullPath, '/');
+            foreach (var item in path)
+            {
+                for (int i = 0; i < current.Nodes.Count; i++)
+                {
+                    var node = current.Nodes[i];
+                    if (node.Text == item)
+                    {
+                        current = node;
+                        break;
+                    }
+                }
+            }
+            return current;
+        }
+        private void BeforeExpand(object sender, TreeViewCancelEventArgs e)
+        {
+            MyList<string> pathParts = new MyList<string>();
+            var current = e.Node;
+            while (current != treeView1.Nodes[0])
+            {
+                pathParts.AddFirst(current.Text);
+                current = current.Parent;
+            }
+            var path = '/' + StringHelper.Join(pathParts.GetArray(), "/");
+            LoadTreeView(path);
         }
 
         private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
@@ -70,6 +135,15 @@ namespace GFSGUI
         }
 
         private int ResolveImageId(FileLs item)
+        {
+            if (item.IsDirectory)
+            {
+                return !item.IsCorrupted ? 0 : 1;
+            }
+            return !item.IsCorrupted ? 2 : 3;
+        }
+
+        private int ResolveImageId(FileSystemNode item)
         {
             if (item.IsDirectory)
             {
@@ -128,7 +202,7 @@ namespace GFSGUI
 
             if (dialogResult == DialogResult.OK)
             {
-                for (int i = 0;i < openFileDialog1.FileNames.Length; i++)
+                for (int i = 0; i < openFileDialog1.FileNames.Length; i++)
                 {
                     var fullPath = openFileDialog1.FileNames[i];
                     var fileName = openFileDialog1.SafeFileNames[i];
@@ -141,5 +215,10 @@ namespace GFSGUI
             }
         }
 
+        private void treeView1_AfterCollapse(object sender, TreeViewEventArgs e)
+        {
+            e.Node.Nodes.Clear();
+            e.Node.Nodes.Add(new TreeNode(""));
+        }
     }
 }

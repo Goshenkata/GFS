@@ -30,11 +30,7 @@
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            TreeNode treeNode1 = new TreeNode("Node0");
-            TreeNode treeNode2 = new TreeNode("Node3");
-            TreeNode treeNode3 = new TreeNode("Node2", new TreeNode[] { treeNode2 });
-            TreeNode treeNode4 = new TreeNode("Node4");
-            TreeNode treeNode5 = new TreeNode("Node1", new TreeNode[] { treeNode3, treeNode4 });
+            TreeNode treeNode1 = new TreeNode("/");
             tableLayoutPanel1 = new TableLayoutPanel();
             flowLayoutPanel1 = new FlowLayoutPanel();
             goBackButton = new Button();
@@ -45,6 +41,7 @@
             listView1 = new ListView();
             imageList1 = new ImageList(components);
             treeView1 = new TreeView();
+            imageList3 = new ImageList(components);
             openFileDialog1 = new OpenFileDialog();
             tableLayoutPanel1.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
@@ -163,21 +160,29 @@
             // treeView1
             // 
             treeView1.Dock = DockStyle.Fill;
+            treeView1.ImageIndex = 0;
+            treeView1.ImageList = imageList3;
             treeView1.Location = new Point(3, 56);
             treeView1.Name = "treeView1";
+            treeNode1.ImageIndex = 0;
             treeNode1.Name = "Node0";
-            treeNode1.Text = "Node0";
-            treeNode2.Name = "Node3";
-            treeNode2.Text = "Node3";
-            treeNode3.Name = "Node2";
-            treeNode3.Text = "Node2";
-            treeNode4.Name = "Node4";
-            treeNode4.Text = "Node4";
-            treeNode5.Name = "Node1";
-            treeNode5.Text = "Node1";
-            treeView1.Nodes.AddRange(new TreeNode[] { treeNode1, treeNode5 });
+            treeNode1.Text = "/";
+            treeView1.Nodes.AddRange(new TreeNode[] { treeNode1 });
+            treeView1.SelectedImageIndex = 0;
             treeView1.Size = new Size(190, 473);
             treeView1.TabIndex = 2;
+            treeView1.AfterCollapse += treeView1_AfterCollapse;
+            treeView1.BeforeExpand += BeforeExpand;
+            // 
+            // imageList3
+            // 
+            imageList3.ColorDepth = ColorDepth.Depth32Bit;
+            imageList3.ImageStream = (ImageListStreamer)resources.GetObject("imageList3.ImageStream");
+            imageList3.TransparentColor = Color.Transparent;
+            imageList3.Images.SetKeyName(0, "folder.png");
+            imageList3.Images.SetKeyName(1, "folder(1).png");
+            imageList3.Images.SetKeyName(2, "document.png");
+            imageList3.Images.SetKeyName(3, "document(1).png");
             // 
             // openFileDialog1
             // 
@@ -209,5 +214,6 @@
         private Button button1;
         private Button button2;
         private OpenFileDialog openFileDialog1;
+        private ImageList imageList3;
     }
 }

@@ -63,6 +63,10 @@ public class FilesystemData : StreamArray
 
     public FileSystemNode? GetNodeByPath(string name)
     {
+        if (name== "/")
+        {
+            return _root;
+        }
         string[] path = StringHelper.Split(name, '/');
         var current = _root;
         foreach (var s in path)
