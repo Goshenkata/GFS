@@ -37,6 +37,7 @@
             imageList2 = new ImageList(components);
             forwardButton = new Button();
             button1 = new Button();
+            button3 = new Button();
             button2 = new Button();
             label1 = new Label();
             listView1 = new ListView();
@@ -73,6 +74,7 @@
             flowLayoutPanel1.Controls.Add(goBackButton);
             flowLayoutPanel1.Controls.Add(forwardButton);
             flowLayoutPanel1.Controls.Add(button1);
+            flowLayoutPanel1.Controls.Add(button3);
             flowLayoutPanel1.Controls.Add(button2);
             flowLayoutPanel1.Controls.Add(label1);
             flowLayoutPanel1.Dock = DockStyle.Fill;
@@ -124,9 +126,19 @@
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
+            // button3
+            // 
+            button3.Location = new Point(154, 3);
+            button3.Name = "button3";
+            button3.Size = new Size(63, 35);
+            button3.TabIndex = 5;
+            button3.Text = "write";
+            button3.UseVisualStyleBackColor = true;
+            button3.Click += button3_Click;
+            // 
             // button2
             // 
-            button2.Location = new Point(154, 3);
+            button2.Location = new Point(223, 3);
             button2.Name = "button2";
             button2.Size = new Size(63, 35);
             button2.TabIndex = 3;
@@ -137,7 +149,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(223, 0);
+            label1.Location = new Point(292, 0);
             label1.Name = "label1";
             label1.Size = new Size(50, 20);
             label1.TabIndex = 4;
@@ -186,6 +198,7 @@
             treeView1.AfterCollapse += treeView1_AfterCollapse;
             treeView1.BeforeExpand += BeforeExpand;
             treeView1.AfterSelect += treeView1_AfterSelect;
+            treeView1.NodeMouseDoubleClick += treeView1_NodeMouseDoubleClick;
             // 
             // imageList3
             // 
@@ -230,5 +243,6 @@
         private OpenFileDialog openFileDialog1;
         private ImageList imageList3;
         private Label label1;
+        private Button button3;
     }
 }

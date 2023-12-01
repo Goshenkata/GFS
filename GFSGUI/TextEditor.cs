@@ -5,13 +5,24 @@ namespace GFSGUI
 {
     public partial class TextEditor : Form
     {
-        FileSystemManager _fsManager;
-        string _fullPath;
-        public TextEditor(FileSystemManager fsManager, string fullPath)
+        private FileSystemManager _fsManager;
+        private string _parentPath;
+        private string _fileName;
+        public TextEditor(FileSystemManager fsManager, string parentPath,string fileName)
         {
             InitializeComponent();
             _fsManager = fsManager;
-            _fullPath = fullPath;
+
+            _parentPath = parentPath; 
+            if (parentPath[^1] != '/') {
+                _parentPath = parentPath + '/';
+            } 
+            _fileName = fileName;
+
+            var fullPath = _parentPath + fileName;
+            if (fileName == "")
+                return;
+
             var text = fsManager.Cat(fullPath);
             if (text == "")
             {
@@ -22,12 +33,14 @@ namespace GFSGUI
                 }
             }
             textBox1.Text = text;
+            textBox2.Text = fileName;
         }
 
         private void writeBtn_Click(object sender, EventArgs e)
         {
 
-            _fsManager.CreateFile(_fullPath, Encoding.UTF8.GetBytes(textBox1.Text));
+            var fullPath = _parentPath + textBox2.Text;
+            _fsManager.CreateFile(fullPath, Encoding.UTF8.GetBytes(textBox1.Text));
             Close();
         }
 

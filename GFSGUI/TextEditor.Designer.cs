@@ -29,43 +29,39 @@
         private void InitializeComponent()
         {
             tableLayoutPanel1 = new TableLayoutPanel();
-            textBox1 = new TextBox();
             panel1 = new Panel();
             closeBtn = new Button();
             writeBtn = new Button();
+            textBox1 = new TextBox();
+            panel2 = new Panel();
+            label1 = new Label();
+            textBox2 = new TextBox();
             tableLayoutPanel1.SuspendLayout();
             panel1.SuspendLayout();
+            panel2.SuspendLayout();
             SuspendLayout();
             // 
             // tableLayoutPanel1
             // 
             tableLayoutPanel1.ColumnCount = 1;
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanel1.Controls.Add(textBox1, 0, 0);
-            tableLayoutPanel1.Controls.Add(panel1, 0, 1);
+            tableLayoutPanel1.Controls.Add(panel1, 0, 2);
+            tableLayoutPanel1.Controls.Add(textBox1, 0, 1);
+            tableLayoutPanel1.Controls.Add(panel2, 0, 0);
             tableLayoutPanel1.Dock = DockStyle.Fill;
             tableLayoutPanel1.Location = new Point(0, 0);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
-            tableLayoutPanel1.RowCount = 2;
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 85F));
+            tableLayoutPanel1.RowCount = 3;
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 75F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 15F));
             tableLayoutPanel1.Size = new Size(800, 450);
             tableLayoutPanel1.TabIndex = 0;
-            // 
-            // textBox1
-            // 
-            textBox1.Dock = DockStyle.Fill;
-            textBox1.Location = new Point(3, 3);
-            textBox1.Multiline = true;
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(794, 376);
-            textBox1.TabIndex = 0;
             // 
             // panel1
             // 
             panel1.Controls.Add(closeBtn);
             panel1.Controls.Add(writeBtn);
-            panel1.Dock = DockStyle.Fill;
             panel1.Location = new Point(3, 385);
             panel1.Name = "panel1";
             panel1.Size = new Size(794, 62);
@@ -87,13 +83,48 @@
             // 
             writeBtn.BackColor = SystemColors.ActiveCaption;
             writeBtn.Font = new Font("Segoe UI", 12F);
-            writeBtn.Location = new Point(208, 11);
+            writeBtn.Location = new Point(152, 11);
             writeBtn.Name = "writeBtn";
             writeBtn.Size = new Size(110, 42);
             writeBtn.TabIndex = 0;
             writeBtn.Text = "Write";
             writeBtn.UseVisualStyleBackColor = false;
             writeBtn.Click += writeBtn_Click;
+            // 
+            // textBox1
+            // 
+            textBox1.Dock = DockStyle.Fill;
+            textBox1.Location = new Point(3, 48);
+            textBox1.Multiline = true;
+            textBox1.Name = "textBox1";
+            textBox1.Size = new Size(794, 331);
+            textBox1.TabIndex = 0;
+            // 
+            // panel2
+            // 
+            panel2.Controls.Add(label1);
+            panel2.Controls.Add(textBox2);
+            panel2.Dock = DockStyle.Fill;
+            panel2.Location = new Point(3, 3);
+            panel2.Name = "panel2";
+            panel2.Size = new Size(794, 39);
+            panel2.TabIndex = 2;
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(9, 9);
+            label1.Name = "label1";
+            label1.Size = new Size(67, 20);
+            label1.TabIndex = 1;
+            label1.Text = "filename";
+            // 
+            // textBox2
+            // 
+            textBox2.Location = new Point(152, 6);
+            textBox2.Name = "textBox2";
+            textBox2.Size = new Size(596, 27);
+            textBox2.TabIndex = 0;
             // 
             // TextEditor
             // 
@@ -106,6 +137,8 @@
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel1.PerformLayout();
             panel1.ResumeLayout(false);
+            panel2.ResumeLayout(false);
+            panel2.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -114,7 +147,10 @@
         private TableLayoutPanel tableLayoutPanel1;
         private TextBox textBox1;
         private Panel panel1;
-        private Button writeBtn;
         private Button closeBtn;
+        private Button writeBtn;
+        private Panel panel2;
+        private Label label1;
+        private TextBox textBox2;
     }
 }

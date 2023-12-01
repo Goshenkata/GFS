@@ -115,7 +115,7 @@ namespace GFSGUI
             if (path == "")
             {
                 path = "/";
-            } 
+            }
             if (path[0] != '/')
             {
                 path = '/' + path;
@@ -171,7 +171,7 @@ namespace GFSGUI
         {
             string selectedItemName = listView1.SelectedItems[0].Text;
             var delimiter = _fsManager.CurrentPath[^1] != '/' ? "/" : "";
-            string fullPath = _fsManager.CurrentPath + "/" + selectedItemName;
+            string fullPath = _fsManager.CurrentPath + delimiter + selectedItemName;
             if (_fsManager.GetNode(fullPath)!.IsDirectory)
             {
                 prevStack.Push(_fsManager.CurrentPath);
@@ -182,7 +182,7 @@ namespace GFSGUI
             }
             else
             {
-                TextEditor textEditor = new TextEditor(_fsManager, fullPath);
+                TextEditor textEditor = new TextEditor(_fsManager, _fsManager.CurrentPath, selectedItemName);
                 textEditor.Show();
             }
         }
@@ -253,10 +253,33 @@ namespace GFSGUI
             if (node != null)
             {
                 label1.Text = node.ToString();
-            } else
+            }
+            else
             {
                 label1.Text = "NULL";
             }
+        }
+
+        private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (e.Node.ImageIndex == 0)
+            {
+                _fsManager.CurrentPath = getTreeNodePath(e.Node);
+            }
+            else if (e.Node.ImageIndex == 2)
+            {
+                TextEditor textEditor = new TextEditor(_fsManager, getTreeNodePath(e.Node.Parent), e.Node.Text);
+                textEditor.Show();
+            }
+            UpdateListView();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            TextEditor textEditor = new TextEditor(_fsManager, _fsManager.CurrentPath, "");
+            textEditor.ShowDialog();
+            UpdateListView();
+            LoadTreeView(_fsManager.CurrentPath);
         }
     }
 }
