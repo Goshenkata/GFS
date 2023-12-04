@@ -32,6 +32,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             TreeNode treeNode1 = new TreeNode("/");
             tableLayoutPanel1 = new TableLayoutPanel();
+            errText = new Label();
             flowLayoutPanel1 = new FlowLayoutPanel();
             goBackButton = new Button();
             imageList2 = new ImageList(components);
@@ -39,7 +40,6 @@
             button1 = new Button();
             button3 = new Button();
             button2 = new Button();
-            label1 = new Label();
             listView1 = new ListView();
             imageList1 = new ImageList(components);
             treeView1 = new TreeView();
@@ -57,16 +57,29 @@
             tableLayoutPanel1.Controls.Add(flowLayoutPanel1, 0, 0);
             tableLayoutPanel1.Controls.Add(listView1, 1, 1);
             tableLayoutPanel1.Controls.Add(treeView1, 0, 1);
+            tableLayoutPanel1.Controls.Add(errText, 1, 2);
             tableLayoutPanel1.Dock = DockStyle.Fill;
             tableLayoutPanel1.Location = new Point(0, 0);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 3;
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 10F));
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 90F));
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 85F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 5F));
             tableLayoutPanel1.Size = new Size(982, 553);
             tableLayoutPanel1.TabIndex = 0;
             tableLayoutPanel1.Paint += tableLayoutPanel1_Paint;
+            // 
+            // errText
+            // 
+            errText.AutoSize = true;
+            errText.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            errText.ForeColor = Color.DarkRed;
+            errText.Location = new Point(199, 525);
+            errText.Name = "errText";
+            errText.Size = new Size(63, 20);
+            errText.TabIndex = 5;
+            errText.Text = "My text";
+            errText.Visible = false;
             // 
             // flowLayoutPanel1
             // 
@@ -76,11 +89,10 @@
             flowLayoutPanel1.Controls.Add(button1);
             flowLayoutPanel1.Controls.Add(button3);
             flowLayoutPanel1.Controls.Add(button2);
-            flowLayoutPanel1.Controls.Add(label1);
             flowLayoutPanel1.Dock = DockStyle.Fill;
             flowLayoutPanel1.Location = new Point(3, 3);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
-            flowLayoutPanel1.Size = new Size(976, 47);
+            flowLayoutPanel1.Size = new Size(976, 49);
             flowLayoutPanel1.TabIndex = 0;
             // 
             // goBackButton
@@ -146,23 +158,14 @@
             button2.UseVisualStyleBackColor = true;
             button2.Click += button2_Click;
             // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Location = new Point(292, 0);
-            label1.Name = "label1";
-            label1.Size = new Size(50, 20);
-            label1.TabIndex = 4;
-            label1.Text = "label1";
-            // 
             // listView1
             // 
             listView1.Dock = DockStyle.Fill;
             listView1.GroupImageList = imageList1;
             listView1.LargeImageList = imageList1;
-            listView1.Location = new Point(199, 56);
+            listView1.Location = new Point(199, 58);
             listView1.Name = "listView1";
-            listView1.Size = new Size(780, 473);
+            listView1.Size = new Size(780, 464);
             listView1.SmallImageList = imageList1;
             listView1.StateImageList = imageList1;
             listView1.TabIndex = 1;
@@ -186,14 +189,14 @@
             treeView1.Dock = DockStyle.Fill;
             treeView1.ImageIndex = 0;
             treeView1.ImageList = imageList3;
-            treeView1.Location = new Point(3, 56);
+            treeView1.Location = new Point(3, 58);
             treeView1.Name = "treeView1";
             treeNode1.ImageIndex = 0;
             treeNode1.Name = "Node0";
             treeNode1.Text = "/";
             treeView1.Nodes.AddRange(new TreeNode[] { treeNode1 });
             treeView1.SelectedImageIndex = 0;
-            treeView1.Size = new Size(190, 473);
+            treeView1.Size = new Size(190, 464);
             treeView1.TabIndex = 2;
             treeView1.AfterCollapse += treeView1_AfterCollapse;
             treeView1.BeforeExpand += BeforeExpand;
@@ -223,8 +226,8 @@
             Name = "Form1";
             Text = "GFS";
             tableLayoutPanel1.ResumeLayout(false);
+            tableLayoutPanel1.PerformLayout();
             flowLayoutPanel1.ResumeLayout(false);
-            flowLayoutPanel1.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -242,7 +245,7 @@
         private Button button2;
         private OpenFileDialog openFileDialog1;
         private ImageList imageList3;
-        private Label label1;
         private Button button3;
+        private Label errText;
     }
 }

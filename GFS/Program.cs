@@ -347,7 +347,11 @@ public class Program
                         return false;
                     }
 
-                    fileSystemManager.Rmdir(parentPath, dirName);
+                    var rmdirResult = fileSystemManager.Rmdir(parentPath, dirName);
+                    if (!rmdirResult.Success)
+                    {
+                        Console.WriteLine(rmdirResult.Message);
+                    }
                     break;
                 case enums.DirectoryCommand.Cd:
                     var fullPath = dirName == ".."

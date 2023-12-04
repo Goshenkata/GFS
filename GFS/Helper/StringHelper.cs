@@ -180,4 +180,10 @@ public class StringHelper
         name = splitPath[splitPath.Length - 1];
         return "/" + StringHelper.Join(splitPath, "/", 0, splitPath.Length - 2);
     }
+
+    public static string ConcatPath(string path, string newName)
+    {
+        var delimiter = path[^1] == '/' ? "" : "/";
+        return path + delimiter + newName;
+    }
 }

@@ -140,7 +140,7 @@ public class SectorData : StreamArray
         }
 
 
-        if (sectorIds[^1] > getLastWrittenSector())
+        if (sectorIds != null && sectorIds[^1] > getLastWrittenSector())
         {
             UpdateLastWrittenSector(sectorIds[^1]);
         }

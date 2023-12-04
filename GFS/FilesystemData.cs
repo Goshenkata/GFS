@@ -1,3 +1,4 @@
+using GFS.DTO;
 using GFS.helper;
 using GFS.Structures;
 
@@ -131,11 +132,11 @@ public class FilesystemData : StreamArray
         _root.PrintTree();
     }
 
-    public bool Rmdir(string parentPath, string dirName)
+    public OperationResult Rmdir(string parentPath, string dirName)
     {
         var parent = GetNodeByPath(parentPath);
         if (parent == null)
-            return false;
+            return new OperationResult() { Success = false, Message = "parent path is null" };
         for (var i = 0; i < parent.Children.Count; i++)
         {
             var current = parent.Children[i];
@@ -143,8 +144,7 @@ public class FilesystemData : StreamArray
             {
                 if (!current.Children.isEmpty())
                 {
-                    Console.Error.WriteLine(Messages.DirectoryIsNotEmpty);
-                    return false;
+                    return new OperationResult() { Success = false, Message = Messages.DirectoryIsNotEmpty };
                 }
 
                 parent.Children.RemoveAt(i);
@@ -152,7 +152,7 @@ public class FilesystemData : StreamArray
         }
 
         WriteMetadata();
-        return true;
+        return new OperationResult() { Success = true, Message = "" };
     }
 
     public FilesystemData(long dataStart, long dataEnd, FileStream fs, BinaryWriter bw, BinaryReader br) : base(dataStart,
@@ -165,5 +165,10 @@ public class FilesystemData : StreamArray
     {
         var node = GetNodeByPath(path);
         return node != null && !node.IsDirectory;
+    }
+
+    public bool Exists(string path)
+    {
+        return GetNodeByPath(path) != null;
     }
 }

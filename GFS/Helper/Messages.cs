@@ -44,4 +44,6 @@ public static class Messages
     public const string CreateDir = "Create Directory";
     public const string EnterData = "Enter a data size unit";
     public const string FilesystemIsInit = "Filesystem is already initialized";
+    public const string InvalidName = "Invalid name";
+    public const string AlreadyExists = "This node already exists";
 }

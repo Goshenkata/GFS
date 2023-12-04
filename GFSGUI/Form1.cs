@@ -7,16 +7,17 @@ namespace GFSGUI
     public partial class Form1 : Form
     {
         FileSystemManager _fsManager;
-        MyStack<string> prevStack = new MyStack<string>();
-        MyStack<string> forwardStack = new MyStack<string>();
+        MyStack<string> _prevStack = new MyStack<string>();
+        MyStack<string> _forwardStack = new MyStack<string>();
+        private FileSystemNode? _selectedNode = null;
 
         private void UpdateHistoryButtonsState()
         {
-            if (prevStack.isEmpty())
+            if (_prevStack.isEmpty())
                 goBackButton.Enabled = false;
             else goBackButton.Enabled = true;
 
-            if (forwardStack.isEmpty())
+            if (_forwardStack.isEmpty())
                 forwardButton.Enabled = false;
             else forwardButton.Enabled = true;
         }
@@ -174,8 +175,8 @@ namespace GFSGUI
             string fullPath = _fsManager.CurrentPath + delimiter + selectedItemName;
             if (_fsManager.GetNode(fullPath)!.IsDirectory)
             {
-                prevStack.Push(_fsManager.CurrentPath);
-                forwardStack.Clear();
+                _prevStack.Push(_fsManager.CurrentPath);
+                _forwardStack.Clear();
                 _fsManager.CurrentPath = fullPath;
                 UpdateListView();
                 UpdateHistoryButtonsState();
@@ -189,16 +190,16 @@ namespace GFSGUI
 
         private void goBackButton_Click(object sender, EventArgs e)
         {
-            forwardStack.Push(_fsManager.CurrentPath);
-            _fsManager.CurrentPath = prevStack.Pop();
+            _forwardStack.Push(_fsManager.CurrentPath);
+            _fsManager.CurrentPath = _prevStack.Pop();
             UpdateListView();
             UpdateHistoryButtonsState();
         }
 
         private void forwardButton_Click(object sender, EventArgs e)
         {
-            prevStack.Push(_fsManager.CurrentPath);
-            _fsManager.CurrentPath = forwardStack.Pop();
+            _prevStack.Push(_fsManager.CurrentPath);
+            _fsManager.CurrentPath = _forwardStack.Pop();
             UpdateListView();
             UpdateHistoryButtonsState();
 
@@ -206,7 +207,7 @@ namespace GFSGUI
 
         private void button1_Click(object sender, EventArgs e)
         {
-            InputForm inputForm = new InputForm(Messages.CreateDir, _fsManager);
+            InputForm inputForm = new InputForm(Messages.CreateDir, _fsManager, InputForm.InputFormOperationEnum.Mkdir);
             inputForm.ShowDialog();
             UpdateListView();
             LoadTreeView(_fsManager.CurrentPath);
@@ -250,13 +251,48 @@ namespace GFSGUI
         }
         private void UpdateSelectedNode(FileSystemNode node)
         {
+             flowLayoutPanel1.Controls.Clear();
+             flowLayoutPanel1.Controls.Add(goBackButton);
+             flowLayoutPanel1.Controls.Add(forwardButton);
+             flowLayoutPanel1.Controls.Add(button1);
+             flowLayoutPanel1.Controls.Add(button3);
+             flowLayoutPanel1.Controls.Add(button2);
+            _selectedNode = node;
             if (node != null)
             {
-                label1.Text = node.ToString();
-            }
-            else
-            {
-                label1.Text = "NULL";
+                var size = new Size(63, 35);
+                MyList<Button> buttons = new MyList<Button>();
+
+                Button renameBtn = new Button();
+                renameBtn.Size = size;
+                renameBtn.Text = "rename";
+                renameBtn.Click += renameBtnClick;
+                buttons.AddLast(renameBtn);
+
+                    Button openBtn = new Button();
+                    openBtn.Size = size;
+                    openBtn.Text = "open";
+                    openBtn.Click += openBtnClick;
+                    buttons.AddLast(openBtn);
+
+                if (node.IsDirectory)
+                {
+                    Button rmdirBtn = new Button();
+                    rmdirBtn.Size = size;
+                    rmdirBtn.Text = "rmdir";
+                    rmdirBtn.Click += rmDirBtnClick;
+                    buttons.AddLast(rmdirBtn);
+                } else
+                {
+
+                    Button rmBtn = new Button();
+                    rmBtn.Size = size;
+                    rmBtn.Text = "rm";
+                    rmBtn.Click += rmBtnClick;
+                    buttons.AddLast(rmBtn);
+                }
+
+                flowLayoutPanel1.Controls.AddRange(buttons.ToArray());
             }
         }
 
@@ -264,7 +300,10 @@ namespace GFSGUI
         {
             if (e.Node.ImageIndex == 0)
             {
+
+                _prevStack.Push(_fsManager.CurrentPath);
                 _fsManager.CurrentPath = getTreeNodePath(e.Node);
+                UpdateHistoryButtonsState();
             }
             else if (e.Node.ImageIndex == 2)
             {
@@ -276,10 +315,56 @@ namespace GFSGUI
 
         private void button3_Click(object sender, EventArgs e)
         {
-            TextEditor textEditor = new TextEditor(_fsManager, _fsManager.CurrentPath, "");
+            var fp = StringHelper.ConcatPath(_selectedNode.Path, _selectedNode.Name);
+            TextEditor textEditor = new TextEditor(_fsManager, fp, "");
             textEditor.ShowDialog();
             UpdateListView();
-            LoadTreeView(_fsManager.CurrentPath);
+            LoadTreeView(fp);
         }
+
+        private void renameBtnClick(object sender, EventArgs e)
+        { 
+            InputForm inputForm = new InputForm("Rename node", _fsManager, InputForm.InputFormOperationEnum.Rename, _selectedNode);
+            inputForm.ShowDialog();
+            UpdateListView();
+            LoadTreeView(_selectedNode.Path);
+        }
+        private void rmDirBtnClick(object sender, EventArgs e)
+        {
+            var fullPath = StringHelper.ConcatPath(_selectedNode.Path, _selectedNode.Name);
+            var opResult = _fsManager.Rmdir(_selectedNode.Path, _selectedNode.Name);
+            if (!opResult.Success)
+            {
+                errText.Visible = true;
+                errText.Text = opResult.Message;
+            } else
+            {
+                errText.Visible = false;
+            }
+
+            if (_fsManager.CurrentPath == fullPath)
+            {
+                _fsManager.CurrentPath = StringHelper.GetParentPath(fullPath);
+                UpdateSelectedNode(_fsManager.GetNode(_fsManager.CurrentPath));
+            }
+
+            UpdateListView();
+            LoadTreeView(_selectedNode.Path);
+        }
+        private void rmBtnClick(object sender, EventArgs e)
+        {
+            var fullPath = StringHelper.ConcatPath(_selectedNode.Path, _selectedNode.Name);
+            _fsManager.RmFile(fullPath);
+            UpdateListView();
+            LoadTreeView(_selectedNode.Path);
+            _selectedNode = null;
+            UpdateSelectedNode(null);
+        }
+        private void openBtnClick(object sender, EventArgs e)
+        { 
+            listView1_ItemActivate(sender, e);
+        }
+
+
     }
 }

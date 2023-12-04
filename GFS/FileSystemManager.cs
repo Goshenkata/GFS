@@ -102,8 +102,26 @@ public class FileSystemManager
             }
         }
     }
+    public void WriteMetadata()
+    {
+        _fsData.WriteMetadata();
+    }
 
 
+    public OperationResult RenameNode(ref FileSystemNode node, string newName)
+    {
+        if (!StringHelper.IsValidNodeName(newName))
+        {
+            return new OperationResult() { Success = false, Message = Messages.InvalidName };
+        }
+        var fullPath =  StringHelper.ConcatPath(node.Path, newName);
+        if (_fsData.Exists(fullPath)) {
+            return new OperationResult() { Success = false, Message = Messages.AlreadyExists };
+        }
+        node.Name = newName;
+        _fsData.WriteMetadata();
+        return new OperationResult() { Success = true, Message = "" };
+    }
     public OperationResult Mkdir(string parentPath, string dirName)
     {
         if (!StringHelper.IsValidNodeName(dirName))
@@ -136,18 +154,21 @@ public class FileSystemManager
         return _fsData.FileExists(dirName);
     }
 
-    public void Rmdir(string parentPath, string dirName)
+    public OperationResult Rmdir(string parentPath, string dirName)
     {
-        _fsData.Rmdir(parentPath, dirName);
+        return _fsData.Rmdir(parentPath, dirName);
     }
 
     public MyList<FileLs> Ls(string path)
     {
         var currentDir = _fsData.GetNodeByPath(path);
         var output = new MyList<FileLs>();
-        foreach (var child in currentDir.Children)
+        if (currentDir != null)
         {
-            output.AddLast(new FileLs { Name = child.Name, IsDirectory = child.IsDirectory, IsCorrupted = child.IsCorrupted });
+            foreach (var child in currentDir.Children)
+            {
+                 output.AddLast(new FileLs { Name = child.Name, IsDirectory = child.IsDirectory, IsCorrupted = child.IsCorrupted });
+            }
         }
         return output;
     }
