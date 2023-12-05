@@ -45,6 +45,7 @@
             imageList3 = new ImageList(components);
             errText = new Label();
             openFileDialog1 = new OpenFileDialog();
+            folderBrowserDialog1 = new FolderBrowserDialog();
             tableLayoutPanel1.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
             SuspendLayout();
@@ -251,5 +252,6 @@
         private ImageList imageList3;
         private Button button3;
         private Label errText;
+        private FolderBrowserDialog folderBrowserDialog1;
     }
 }

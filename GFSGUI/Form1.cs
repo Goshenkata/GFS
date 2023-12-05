@@ -290,6 +290,12 @@ namespace GFSGUI
                 openBtn.Text = "open";
                 openBtn.Click += openBtnClick;
                 buttons.AddLast(openBtn);
+                
+                Button exportBtn = new Button();
+                exportBtn.Size = size;
+                exportBtn.Text = "export";
+                exportBtn.Click += exportBtnClick;
+                buttons.AddLast(exportBtn);
 
                 if (node.IsDirectory)
                 {
@@ -379,6 +385,16 @@ namespace GFSGUI
         private void openBtnClick(object sender, EventArgs e)
         { 
             listView1_ItemActivate(sender, e);
+        }
+
+        private void exportBtnClick(object sender, EventArgs e)
+        {
+            var source = StringHelper.ConcatPath(_selectedNode.Path, _selectedNode.Name);
+            var result = folderBrowserDialog1.ShowDialog();
+            if (result == DialogResult.OK && folderBrowserDialog1.SelectedPath != null) {
+                var destination = StringHelper.ConcatPath(folderBrowserDialog1.SelectedPath, _selectedNode.Name);
+                _fsManager.Export(source, destination);
+            }
         }
 
 

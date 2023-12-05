@@ -252,7 +252,7 @@ public class FileSystemManager
 
     public bool Export(string sourceFromFs, string destinationOnDisk)
     {
-        using var bw = new BinaryWriter(File.Open(destinationOnDisk, FileMode.Create, FileAccess.Write));
+        using var bw = new BinaryWriter(File.Open(destinationOnDisk, FileMode.Create, FileAccess.ReadWrite));
         var node = _fsData.GetNodeByPath(sourceFromFs);
         var data = _sectorData.ReadFile(node);
         bw.Write(data);
