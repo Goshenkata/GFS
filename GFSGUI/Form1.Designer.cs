@@ -32,7 +32,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             TreeNode treeNode1 = new TreeNode("/");
             tableLayoutPanel1 = new TableLayoutPanel();
-            errText = new Label();
             flowLayoutPanel1 = new FlowLayoutPanel();
             goBackButton = new Button();
             imageList2 = new ImageList(components);
@@ -44,6 +43,7 @@
             imageList1 = new ImageList(components);
             treeView1 = new TreeView();
             imageList3 = new ImageList(components);
+            errText = new Label();
             openFileDialog1 = new OpenFileDialog();
             tableLayoutPanel1.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
@@ -68,18 +68,6 @@
             tableLayoutPanel1.Size = new Size(982, 553);
             tableLayoutPanel1.TabIndex = 0;
             tableLayoutPanel1.Paint += tableLayoutPanel1_Paint;
-            // 
-            // errText
-            // 
-            errText.AutoSize = true;
-            errText.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            errText.ForeColor = Color.DarkRed;
-            errText.Location = new Point(199, 525);
-            errText.Name = "errText";
-            errText.Size = new Size(63, 20);
-            errText.TabIndex = 5;
-            errText.Text = "My text";
-            errText.Visible = false;
             // 
             // flowLayoutPanel1
             // 
@@ -183,6 +171,8 @@
             imageList1.Images.SetKeyName(1, "folder(1).png");
             imageList1.Images.SetKeyName(2, "document.png");
             imageList1.Images.SetKeyName(3, "document(1).png");
+            imageList1.Images.SetKeyName(4, "image(2).png");
+            imageList1.Images.SetKeyName(5, "image(1).png");
             // 
             // treeView1
             // 
@@ -212,6 +202,20 @@
             imageList3.Images.SetKeyName(1, "folder(1).png");
             imageList3.Images.SetKeyName(2, "document.png");
             imageList3.Images.SetKeyName(3, "document(1).png");
+            imageList3.Images.SetKeyName(4, "image(2).png");
+            imageList3.Images.SetKeyName(5, "image(1).png");
+            // 
+            // errText
+            // 
+            errText.AutoSize = true;
+            errText.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            errText.ForeColor = Color.DarkRed;
+            errText.Location = new Point(199, 525);
+            errText.Name = "errText";
+            errText.Size = new Size(63, 20);
+            errText.TabIndex = 5;
+            errText.Text = "My text";
+            errText.Visible = false;
             // 
             // openFileDialog1
             // 

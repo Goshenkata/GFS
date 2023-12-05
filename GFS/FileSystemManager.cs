@@ -290,4 +290,11 @@ public class FileSystemManager
         Console.WriteLine("last written sector: " + _sectorData.getLastWrittenSector());
         Console.WriteLine(_sectorData.GetSector(sector));
     }
+
+    public byte[] GetBytes(string fullPath)
+    {
+        var node = _fsData.GetNodeByPath(fullPath);
+        return _sectorData.ReadFile(node);
+
+    }
 }

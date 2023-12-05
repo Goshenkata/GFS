@@ -186,4 +186,13 @@ public class StringHelper
         var delimiter = path[^1] == '/' ? "" : "/";
         return path + delimiter + newName;
     }
+
+    public static bool isImage(string filename)
+    {
+        var parts = Split(filename, '.');
+        if (parts.Length == 0)  return false;
+        var ext = parts[^1];
+        return ext == "png" || ext == "jpg" || ext == "jpeg";
+    }
+
 }

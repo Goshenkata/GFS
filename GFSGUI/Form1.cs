@@ -155,6 +155,10 @@ namespace GFSGUI
             if (item.IsDirectory)
             {
                 return !item.IsCorrupted ? 0 : 1;
+            } 
+            if (StringHelper.isImage(item.Name))
+            {
+                return !item.IsCorrupted ? 4 : 5;
             }
             return !item.IsCorrupted ? 2 : 3;
         }
@@ -164,6 +168,10 @@ namespace GFSGUI
             if (item.IsDirectory)
             {
                 return !item.IsCorrupted ? 0 : 1;
+            }
+            if (StringHelper.isImage(item.Name))
+            {
+                return !item.IsCorrupted ? 4 : 5;
             }
             return !item.IsCorrupted ? 2 : 3;
         }
@@ -183,8 +191,16 @@ namespace GFSGUI
             }
             else
             {
-                TextEditor textEditor = new TextEditor(_fsManager, _fsManager.CurrentPath, selectedItemName);
-                textEditor.Show();
+                if (StringHelper.isImage(fullPath))
+                {
+                    var bytes = _fsManager.GetBytes(fullPath);
+                    ImageViewer image = new ImageViewer(bytes);
+                    image.Show();
+                } else
+                {
+                    TextEditor textEditor = new TextEditor(_fsManager, _fsManager.CurrentPath, selectedItemName);
+                    textEditor.Show();
+                }
             }
         }
 
@@ -269,11 +285,11 @@ namespace GFSGUI
                 renameBtn.Click += renameBtnClick;
                 buttons.AddLast(renameBtn);
 
-                    Button openBtn = new Button();
-                    openBtn.Size = size;
-                    openBtn.Text = "open";
-                    openBtn.Click += openBtnClick;
-                    buttons.AddLast(openBtn);
+                Button openBtn = new Button();
+                openBtn.Size = size;
+                openBtn.Text = "open";
+                openBtn.Click += openBtnClick;
+                buttons.AddLast(openBtn);
 
                 if (node.IsDirectory)
                 {
