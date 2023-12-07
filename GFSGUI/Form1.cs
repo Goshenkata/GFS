@@ -260,7 +260,12 @@ namespace GFSGUI
                     var fullPath = openFileDialog1.FileNames[i];
                     var fileName = openFileDialog1.SafeFileNames[i];
                     var node = resolveNode(true);
-                    var myPath = StringHelper.ConcatPath(node.Path, fileName);
+
+                    var myParentPath = node == _fsManager.GetNode("/") ? 
+                        "/" :
+                        StringHelper.ConcatPath(node.Path, node.Name);
+
+                    var myPath = StringHelper.ConcatPath(myParentPath, fileName);
                     //todo add validation
                     _fsManager.ImportFile(fullPath, myPath, false);
                 }

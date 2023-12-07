@@ -214,9 +214,9 @@
             errText.ForeColor = Color.DarkRed;
             errText.Location = new Point(199, 525);
             errText.Name = "errText";
-            errText.Size = new Size(63, 20);
+            errText.Size = new Size(18, 20);
             errText.TabIndex = 5;
-            errText.Text = "My text";
+            errText.Text = "C";
             errText.Visible = false;
             // 
             // openFileDialog1

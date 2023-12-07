@@ -1,4 +1,5 @@
 ﻿using GFS;
+using GFS.helper;
 using System.Text;
 
 namespace GFSGUI
@@ -40,8 +41,15 @@ namespace GFSGUI
         {
 
             var fullPath = _parentPath + textBox2.Text;
-            _fsManager.CreateFile(fullPath, Encoding.UTF8.GetBytes(textBox1.Text));
-            Close();
+            if (!_fsManager.NodeExists(fullPath))
+            {
+                _fsManager.CreateFile(fullPath, Encoding.UTF8.GetBytes(textBox1.Text));
+                Close();
+            } else
+            {
+                errText.Visible = true;
+                errText.Text = Messages.AlreadyExists;
+            }
         }
 
         private void closeBtn_Click(object sender, EventArgs e)

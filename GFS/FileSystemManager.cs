@@ -129,10 +129,10 @@ public class FileSystemManager
             return new OperationResult() { Success = false, Message = Messages.InvalidDirName };
                     }
 
-        if (DirExists(parentPath + dirName))
+        if (_fsData.Exists(parentPath + dirName))
         {
-            Console.Error.WriteLine(Messages.DirExists);
-            return new OperationResult() { Success = false, Message = Messages.DirExists };
+            Console.Error.WriteLine(Messages.AlreadyExists);
+            return new OperationResult() { Success = false, Message = Messages.AlreadyExists };
         }
 
         _fsData.Mkdir(parentPath, dirName);
@@ -237,7 +237,7 @@ public class FileSystemManager
     public bool ImportFile(string outsideFilePath, string myFilePath, bool isAppend)
     {
         byte[] data = File.ReadAllBytes(outsideFilePath);
-        if (isAppend && FileExists(myFilePath))
+        if (isAppend && _fsData.Exists(myFilePath))
         {
             //append to file
             AppendToFile(myFilePath, data);
@@ -296,5 +296,10 @@ public class FileSystemManager
         var node = _fsData.GetNodeByPath(fullPath);
         return _sectorData.ReadFile(node);
 
+    }
+
+    public bool NodeExists(string fullPath)
+    {
+        return _fsData.Exists(fullPath);
     }
 }
