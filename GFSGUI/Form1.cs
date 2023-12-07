@@ -4,12 +4,26 @@ using GFS.helper;
 using GFS.Structures;
 namespace GFSGUI
 {
+    // todo add checks for file name dublication
     public partial class Form1 : Form
     {
         FileSystemManager _fsManager;
         MyStack<string> _prevStack = new MyStack<string>();
         MyStack<string> _forwardStack = new MyStack<string>();
         private FileSystemNode? _selectedNode = null;
+
+        private FileSystemNode resolveNode(bool dirOnly)
+        {
+            if (_selectedNode == null)
+            {
+                if (dirOnly)
+                {
+                    return _fsManager.GetNode(_fsManager.CurrentPath);
+                }
+                return null;
+            }
+            return _selectedNode;
+        }
 
         private void UpdateHistoryButtonsState()
         {
@@ -148,6 +162,7 @@ namespace GFSGUI
                 listViewItem.Font = font;
                 listView1.Items.Add(listViewItem);
             }
+            errText.Visible = false; ;
         }
 
         private int ResolveImageId(FileLs item)
@@ -178,10 +193,13 @@ namespace GFSGUI
 
         private void listView1_ItemActivate(object sender, EventArgs e)
         {
+            if (listView1.SelectedItems.Count > 0)
+            {
             string selectedItemName = listView1.SelectedItems[0].Text;
-            var delimiter = _fsManager.CurrentPath[^1] != '/' ? "/" : "";
-            string fullPath = _fsManager.CurrentPath + delimiter + selectedItemName;
-            if (_fsManager.GetNode(fullPath)!.IsDirectory)
+            string fullPath = StringHelper.ConcatPath(_fsManager.CurrentPath, selectedItemName);
+            var node =  _fsManager.GetNode(fullPath);
+            _selectedNode = node;
+            if (node.IsDirectory)
             {
                 _prevStack.Push(_fsManager.CurrentPath);
                 _forwardStack.Clear();
@@ -201,6 +219,7 @@ namespace GFSGUI
                     TextEditor textEditor = new TextEditor(_fsManager, _fsManager.CurrentPath, selectedItemName);
                     textEditor.Show();
                 }
+            }
             }
         }
 
@@ -223,7 +242,8 @@ namespace GFSGUI
 
         private void button1_Click(object sender, EventArgs e)
         {
-            InputForm inputForm = new InputForm(Messages.CreateDir, _fsManager, InputForm.InputFormOperationEnum.Mkdir);
+            var node = resolveNode(true);
+            InputForm inputForm = new InputForm(Messages.CreateDir, _fsManager, InputForm.InputFormOperationEnum.Mkdir, node);
             inputForm.ShowDialog();
             UpdateListView();
             LoadTreeView(_fsManager.CurrentPath);
@@ -239,8 +259,8 @@ namespace GFSGUI
                 {
                     var fullPath = openFileDialog1.FileNames[i];
                     var fileName = openFileDialog1.SafeFileNames[i];
-                    var delimiter = _fsManager.CurrentPath[^1] == '/' ? "" : "/";
-                    var myPath = _fsManager.CurrentPath + delimiter + fileName;
+                    var node = resolveNode(true);
+                    var myPath = StringHelper.ConcatPath(node.Path, fileName);
                     //todo add validation
                     _fsManager.ImportFile(fullPath, myPath, false);
                 }
@@ -280,8 +300,8 @@ namespace GFSGUI
                 MyList<Button> buttons = new MyList<Button>();
 
                 Button renameBtn = new Button();
-                renameBtn.Size = size;
                 renameBtn.Text = "rename";
+                renameBtn.Size = new Size(size.Width + 20, size.Height);
                 renameBtn.Click += renameBtnClick;
                 buttons.AddLast(renameBtn);
 
@@ -291,11 +311,6 @@ namespace GFSGUI
                 openBtn.Click += openBtnClick;
                 buttons.AddLast(openBtn);
                 
-                Button exportBtn = new Button();
-                exportBtn.Size = size;
-                exportBtn.Text = "export";
-                exportBtn.Click += exportBtnClick;
-                buttons.AddLast(exportBtn);
 
                 if (node.IsDirectory)
                 {
@@ -312,6 +327,12 @@ namespace GFSGUI
                     rmBtn.Text = "rm";
                     rmBtn.Click += rmBtnClick;
                     buttons.AddLast(rmBtn);
+
+                Button exportBtn = new Button();
+                exportBtn.Size = size;
+                exportBtn.Text = "export";
+                exportBtn.Click += exportBtnClick;
+                buttons.AddLast(exportBtn);
                 }
 
                 flowLayoutPanel1.Controls.AddRange(buttons.ToArray());
@@ -331,13 +352,30 @@ namespace GFSGUI
             {
                 TextEditor textEditor = new TextEditor(_fsManager, getTreeNodePath(e.Node.Parent), e.Node.Text);
                 textEditor.Show();
+            } else if (e.Node.ImageIndex == 4)
+            {
+                    var bytes = _fsManager.GetBytes(getTreeNodePath(e.Node));
+                    ImageViewer image = new ImageViewer(bytes);
+                    image.Show();
             }
             UpdateListView();
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            var fp = StringHelper.ConcatPath(_selectedNode.Path, _selectedNode.Name);
+            var node = resolveNode(true);
+
+            if (!node.IsDirectory || listView1.SelectedItems.Count > 0)
+            {
+                node = _fsManager.GetNode(_fsManager.CurrentPath);
+            }
+
+            var fp = StringHelper.ConcatPath(node.Path, node.Name);
+            if (node == _fsManager.GetNode("/"))
+            {
+                fp = "/";
+            }
+
             TextEditor textEditor = new TextEditor(_fsManager, fp, "");
             textEditor.ShowDialog();
             UpdateListView();
@@ -345,25 +383,26 @@ namespace GFSGUI
         }
 
         private void renameBtnClick(object sender, EventArgs e)
-        { 
-            InputForm inputForm = new InputForm("Rename node", _fsManager, InputForm.InputFormOperationEnum.Rename, _selectedNode);
-            inputForm.ShowDialog();
-            UpdateListView();
-            LoadTreeView(_selectedNode.Path);
+        {
+            var node = resolveNode(false);
+            if (node != null && node != _fsManager.GetNode("/"))
+            {
+                InputForm inputForm = new InputForm("Rename node", _fsManager, InputForm.InputFormOperationEnum.Rename, _selectedNode);
+                inputForm.ShowDialog();
+                UpdateListView();
+                LoadTreeView(_selectedNode.Path);
+                errText.Visible = false; ;
+            } else {
+                errText.Visible = true;
+                errText.Text = Messages.NothingSelected;
+            }
         }
         private void rmDirBtnClick(object sender, EventArgs e)
         {
+            if (_selectedNode != null && _selectedNode.IsDirectory)
+            {
             var fullPath = StringHelper.ConcatPath(_selectedNode.Path, _selectedNode.Name);
             var opResult = _fsManager.Rmdir(_selectedNode.Path, _selectedNode.Name);
-            if (!opResult.Success)
-            {
-                errText.Visible = true;
-                errText.Text = opResult.Message;
-            } else
-            {
-                errText.Visible = false;
-            }
-
             if (_fsManager.CurrentPath == fullPath)
             {
                 _fsManager.CurrentPath = StringHelper.GetParentPath(fullPath);
@@ -372,10 +411,17 @@ namespace GFSGUI
 
             UpdateListView();
             LoadTreeView(_selectedNode.Path);
+            if (!opResult.Success)
+            {
+                errText.Visible = true;
+                errText.Text = opResult.Message;
+            } 
+            }
         }
         private void rmBtnClick(object sender, EventArgs e)
         {
-            var fullPath = StringHelper.ConcatPath(_selectedNode.Path, _selectedNode.Name);
+            var node = resolveNode(false);
+            var fullPath = StringHelper.ConcatPath(node.Path, node.Name);
             _fsManager.RmFile(fullPath);
             UpdateListView();
             LoadTreeView(_selectedNode.Path);
@@ -389,14 +435,20 @@ namespace GFSGUI
 
         private void exportBtnClick(object sender, EventArgs e)
         {
-            var source = StringHelper.ConcatPath(_selectedNode.Path, _selectedNode.Name);
-            var result = folderBrowserDialog1.ShowDialog();
-            if (result == DialogResult.OK && folderBrowserDialog1.SelectedPath != null) {
-                var destination = StringHelper.ConcatPath(folderBrowserDialog1.SelectedPath, _selectedNode.Name);
-                _fsManager.Export(source, destination);
+            var node = resolveNode(false);
+            if (node != null && !node.IsDirectory)
+            {
+                var source = StringHelper.ConcatPath(node.Path, node.Name);
+                var result = folderBrowserDialog1.ShowDialog();
+                if (result == DialogResult.OK && folderBrowserDialog1.SelectedPath != null)     {
+                    var destination = StringHelper.ConcatPath(folderBrowserDialog1.SelectedPath, _selectedNode.Name);
+                    _fsManager.Export(source, destination);
+                }
+            } else
+            {
+                errText.Visible = true;
+                errText.Text = Messages.NothingSelected;
             }
         }
-
-
     }
 }

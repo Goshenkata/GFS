@@ -21,10 +21,10 @@ namespace GFSGUI
             if (_operation == InputFormOperationEnum.Rename)
             {
                 textBox1.Text = node.Name;
-                closeBtn.Text = "Rename";
+                writeBtn.Text = "Rename";
             } else
             {
-               closeBtn.Text = "Create";
+               writeBtn.Text = "Create";
             }
         }
 
@@ -36,7 +36,7 @@ namespace GFSGUI
             switch (_operation)
             {
                 case InputFormOperationEnum.Mkdir:
-                    operationResult = _fileSystemManager.Mkdir(_fileSystemManager.CurrentPath,text);
+                    operationResult = _fileSystemManager.Mkdir(_fileSystemNode.Path,text);
                     break;
                 case InputFormOperationEnum.Rename:
                     if (_fileSystemNode != null)

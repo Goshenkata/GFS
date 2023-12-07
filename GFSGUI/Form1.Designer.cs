@@ -153,6 +153,7 @@
             listView1.GroupImageList = imageList1;
             listView1.LargeImageList = imageList1;
             listView1.Location = new Point(199, 58);
+            listView1.MultiSelect = false;
             listView1.Name = "listView1";
             listView1.Size = new Size(780, 464);
             listView1.SmallImageList = imageList1;

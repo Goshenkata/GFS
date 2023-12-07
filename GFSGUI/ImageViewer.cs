@@ -16,12 +16,7 @@ namespace GFSGUI
         {
             InitializeComponent();
             Image image = LoadImageFromBytes(data);
-            PictureBox pictureBox = new PictureBox();
-            pictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
-            pictureBox.Image = image;
-
-            this.Size = pictureBox.Size;
-            this.Controls.Add(pictureBox);
+            pictureBox1.Image = image;
         }
 
         private Image LoadImageFromBytes(byte[] data)
@@ -39,6 +34,11 @@ namespace GFSGUI
                 MessageBox.Show($"Error loading image: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
+        }
+
+        private void ImageViewer_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

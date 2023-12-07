@@ -46,4 +46,5 @@ public static class Messages
     public const string FilesystemIsInit = "Filesystem is already initialized";
     public const string InvalidName = "Invalid name";
     public const string AlreadyExists = "This node already exists";
+    public const string NothingSelected = "Nothing is selected";
 }
