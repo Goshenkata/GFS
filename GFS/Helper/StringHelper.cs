@@ -190,7 +190,7 @@ public class StringHelper
     public static bool isImage(string filename)
     {
         var parts = Split(filename, '.');
-        if (parts.Length == 0)  return false;
+        if (parts.Length == 0) return false;
         var ext = parts[^1];
         return ext == "png" || ext == "jpg" || ext == "jpeg";
     }

@@ -64,7 +64,7 @@ public class FilesystemData : StreamArray
 
     public FileSystemNode? GetNodeByPath(string name)
     {
-        if (name== "/")
+        if (name == "/")
         {
             return _root;
         }

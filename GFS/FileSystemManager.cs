@@ -60,7 +60,7 @@ public class FileSystemManager
         _fsData.LoadFs();
 
         _sectorData = new SectorData(sectorOffset + 1, maxSize, _fs, _bw, _br, sectorSize);
-        return new OperationResult() { Success = true , Message = ""};
+        return new OperationResult() { Success = true, Message = "" };
     }
 
 
@@ -114,8 +114,9 @@ public class FileSystemManager
         {
             return new OperationResult() { Success = false, Message = Messages.InvalidName };
         }
-        var fullPath =  StringHelper.ConcatPath(node.Path, newName);
-        if (_fsData.Exists(fullPath)) {
+        var fullPath = StringHelper.ConcatPath(node.Path, newName);
+        if (_fsData.Exists(fullPath))
+        {
             return new OperationResult() { Success = false, Message = Messages.AlreadyExists };
         }
         node.Name = newName;
@@ -127,7 +128,7 @@ public class FileSystemManager
         if (!StringHelper.IsValidNodeName(dirName))
         {
             return new OperationResult() { Success = false, Message = Messages.InvalidDirName };
-                    }
+        }
 
         if (_fsData.Exists(parentPath + dirName))
         {
@@ -167,7 +168,7 @@ public class FileSystemManager
         {
             foreach (var child in currentDir.Children)
             {
-                 output.AddLast(new FileLs { Name = child.Name, IsDirectory = child.IsDirectory, IsCorrupted = child.IsCorrupted });
+                output.AddLast(new FileLs { Name = child.Name, IsDirectory = child.IsDirectory, IsCorrupted = child.IsCorrupted });
             }
         }
         return output;

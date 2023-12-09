@@ -1,14 +1,5 @@
 ﻿using GFS;
 using GFS.helper;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace GFSGUI
 {
@@ -23,8 +14,8 @@ namespace GFSGUI
 
         private void writeBtn_Click(object sender, EventArgs e)
         {
-            long maxSize = (long) numericUpDown1.Value;
-            int sectorSize = (int) numericUpDown2.Value;
+            long maxSize = (long)numericUpDown1.Value;
+            int sectorSize = (int)numericUpDown2.Value;
             var dataSize = comboBox1.Text;
             if (dataSize == "")
             {

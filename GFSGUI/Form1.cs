@@ -4,7 +4,11 @@ using GFS.helper;
 using GFS.Structures;
 namespace GFSGUI
 {
-    // todo add checks for file name dublication
+    // todo going back and forth in history does not update buttons
+    // todo file stream random closing
+    // todo improve import performance for large files
+    // todo free memory doesnt work exactly find out tf it was
+    //todo lock file name control in write file
     public partial class Form1 : Form
     {
         FileSystemManager _fsManager;
@@ -170,7 +174,7 @@ namespace GFSGUI
             if (item.IsDirectory)
             {
                 return !item.IsCorrupted ? 0 : 1;
-            } 
+            }
             if (StringHelper.isImage(item.Name))
             {
                 return !item.IsCorrupted ? 4 : 5;
@@ -195,31 +199,33 @@ namespace GFSGUI
         {
             if (listView1.SelectedItems.Count > 0)
             {
-            string selectedItemName = listView1.SelectedItems[0].Text;
-            string fullPath = StringHelper.ConcatPath(_fsManager.CurrentPath, selectedItemName);
-            var node =  _fsManager.GetNode(fullPath);
-            _selectedNode = node;
-            if (node.IsDirectory)
-            {
-                _prevStack.Push(_fsManager.CurrentPath);
-                _forwardStack.Clear();
-                _fsManager.CurrentPath = fullPath;
-                UpdateListView();
-                UpdateHistoryButtonsState();
-            }
-            else
-            {
-                if (StringHelper.isImage(fullPath))
+                string selectedItemName = listView1.SelectedItems[0].Text;
+                string fullPath = StringHelper.ConcatPath(_fsManager.CurrentPath, selectedItemName);
+                var node = _fsManager.GetNode(fullPath);
+                _selectedNode = node;
+                if (node.IsDirectory)
                 {
-                    var bytes = _fsManager.GetBytes(fullPath);
-                    ImageViewer image = new ImageViewer(bytes);
-                    image.Show();
-                } else
-                {
-                    TextEditor textEditor = new TextEditor(_fsManager, _fsManager.CurrentPath, selectedItemName);
-                    textEditor.Show();
+                    _prevStack.Push(_fsManager.CurrentPath);
+                    _forwardStack.Clear();
+                    _fsManager.CurrentPath = fullPath;
+                    UpdateHistoryButtonsState();
                 }
-            }
+                else
+                {
+                    if (StringHelper.isImage(fullPath))
+                    {
+                        var bytes = _fsManager.GetBytes(fullPath);
+                        ImageViewer image = new ImageViewer(bytes);
+                        image.Show();
+                    }
+                    else
+                    {
+                        TextEditor textEditor = new TextEditor(_fsManager, _fsManager.CurrentPath, selectedItemName);
+                        textEditor.ShowDialog();
+                    }
+                }
+                UpdateListView();
+                LoadTreeView(fullPath);
             }
         }
 
@@ -227,6 +233,7 @@ namespace GFSGUI
         {
             _forwardStack.Push(_fsManager.CurrentPath);
             _fsManager.CurrentPath = _prevStack.Pop();
+            UpdateSelectedNode(null);
             UpdateListView();
             UpdateHistoryButtonsState();
         }
@@ -261,7 +268,7 @@ namespace GFSGUI
                     var fileName = openFileDialog1.SafeFileNames[i];
                     var node = resolveNode(true);
 
-                    var myParentPath = node == _fsManager.GetNode("/") ? 
+                    var myParentPath = node == _fsManager.GetNode("/") ?
                         "/" :
                         StringHelper.ConcatPath(node.Path, node.Name);
 
@@ -292,12 +299,12 @@ namespace GFSGUI
         }
         private void UpdateSelectedNode(FileSystemNode node)
         {
-             flowLayoutPanel1.Controls.Clear();
-             flowLayoutPanel1.Controls.Add(goBackButton);
-             flowLayoutPanel1.Controls.Add(forwardButton);
-             flowLayoutPanel1.Controls.Add(button1);
-             flowLayoutPanel1.Controls.Add(button3);
-             flowLayoutPanel1.Controls.Add(button2);
+            flowLayoutPanel1.Controls.Clear();
+            flowLayoutPanel1.Controls.Add(goBackButton);
+            flowLayoutPanel1.Controls.Add(forwardButton);
+            flowLayoutPanel1.Controls.Add(button1);
+            flowLayoutPanel1.Controls.Add(button3);
+            flowLayoutPanel1.Controls.Add(button2);
             _selectedNode = node;
             if (node != null)
             {
@@ -315,7 +322,7 @@ namespace GFSGUI
                 openBtn.Text = "open";
                 openBtn.Click += openBtnClick;
                 buttons.AddLast(openBtn);
-                
+
 
                 if (node.IsDirectory)
                 {
@@ -324,7 +331,8 @@ namespace GFSGUI
                     rmdirBtn.Text = "rmdir";
                     rmdirBtn.Click += rmDirBtnClick;
                     buttons.AddLast(rmdirBtn);
-                } else
+                }
+                else
                 {
 
                     Button rmBtn = new Button();
@@ -333,11 +341,11 @@ namespace GFSGUI
                     rmBtn.Click += rmBtnClick;
                     buttons.AddLast(rmBtn);
 
-                Button exportBtn = new Button();
-                exportBtn.Size = size;
-                exportBtn.Text = "export";
-                exportBtn.Click += exportBtnClick;
-                buttons.AddLast(exportBtn);
+                    Button exportBtn = new Button();
+                    exportBtn.Size = size;
+                    exportBtn.Text = "export";
+                    exportBtn.Click += exportBtnClick;
+                    buttons.AddLast(exportBtn);
                 }
 
                 flowLayoutPanel1.Controls.AddRange(buttons.ToArray());
@@ -357,11 +365,12 @@ namespace GFSGUI
             {
                 TextEditor textEditor = new TextEditor(_fsManager, getTreeNodePath(e.Node.Parent), e.Node.Text);
                 textEditor.Show();
-            } else if (e.Node.ImageIndex == 4)
+            }
+            else if (e.Node.ImageIndex == 4)
             {
-                    var bytes = _fsManager.GetBytes(getTreeNodePath(e.Node));
-                    ImageViewer image = new ImageViewer(bytes);
-                    image.Show();
+                var bytes = _fsManager.GetBytes(getTreeNodePath(e.Node));
+                ImageViewer image = new ImageViewer(bytes);
+                image.Show();
             }
             UpdateListView();
         }
@@ -397,7 +406,9 @@ namespace GFSGUI
                 UpdateListView();
                 LoadTreeView(_selectedNode.Path);
                 errText.Visible = false; ;
-            } else {
+            }
+            else
+            {
                 errText.Visible = true;
                 errText.Text = Messages.NothingSelected;
             }
@@ -406,21 +417,21 @@ namespace GFSGUI
         {
             if (_selectedNode != null && _selectedNode.IsDirectory)
             {
-            var fullPath = StringHelper.ConcatPath(_selectedNode.Path, _selectedNode.Name);
-            var opResult = _fsManager.Rmdir(_selectedNode.Path, _selectedNode.Name);
-            if (_fsManager.CurrentPath == fullPath)
-            {
-                _fsManager.CurrentPath = StringHelper.GetParentPath(fullPath);
-                UpdateSelectedNode(_fsManager.GetNode(_fsManager.CurrentPath));
-            }
+                var fullPath = StringHelper.ConcatPath(_selectedNode.Path, _selectedNode.Name);
+                var opResult = _fsManager.Rmdir(_selectedNode.Path, _selectedNode.Name);
+                if (_fsManager.CurrentPath == fullPath)
+                {
+                    _fsManager.CurrentPath = StringHelper.GetParentPath(fullPath);
+                    UpdateSelectedNode(_fsManager.GetNode(_fsManager.CurrentPath));
+                }
 
-            UpdateListView();
-            LoadTreeView(_selectedNode.Path);
-            if (!opResult.Success)
-            {
-                errText.Visible = true;
-                errText.Text = opResult.Message;
-            } 
+                UpdateListView();
+                LoadTreeView(_selectedNode.Path);
+                if (!opResult.Success)
+                {
+                    errText.Visible = true;
+                    errText.Text = opResult.Message;
+                }
             }
         }
         private void rmBtnClick(object sender, EventArgs e)
@@ -434,7 +445,7 @@ namespace GFSGUI
             UpdateSelectedNode(null);
         }
         private void openBtnClick(object sender, EventArgs e)
-        { 
+        {
             listView1_ItemActivate(sender, e);
         }
 
@@ -445,11 +456,13 @@ namespace GFSGUI
             {
                 var source = StringHelper.ConcatPath(node.Path, node.Name);
                 var result = folderBrowserDialog1.ShowDialog();
-                if (result == DialogResult.OK && folderBrowserDialog1.SelectedPath != null)     {
+                if (result == DialogResult.OK && folderBrowserDialog1.SelectedPath != null)
+                {
                     var destination = StringHelper.ConcatPath(folderBrowserDialog1.SelectedPath, _selectedNode.Name);
                     _fsManager.Export(source, destination);
                 }
-            } else
+            }
+            else
             {
                 errText.Visible = true;
                 errText.Text = Messages.NothingSelected;

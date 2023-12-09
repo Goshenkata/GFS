@@ -9,15 +9,16 @@ namespace GFSGUI
         private FileSystemManager _fsManager;
         private string _parentPath;
         private string _fileName;
-        public TextEditor(FileSystemManager fsManager, string parentPath,string fileName)
+        public TextEditor(FileSystemManager fsManager, string parentPath, string fileName)
         {
             InitializeComponent();
             _fsManager = fsManager;
 
-            _parentPath = parentPath; 
-            if (parentPath[^1] != '/') {
+            _parentPath = parentPath;
+            if (parentPath[^1] != '/')
+            {
                 _parentPath = parentPath + '/';
-            } 
+            }
             _fileName = fileName;
 
             var fullPath = _parentPath + fileName;
@@ -41,11 +42,14 @@ namespace GFSGUI
         {
 
             var fullPath = _parentPath + textBox2.Text;
+            var oldPath = StringHelper.ConcatPath(_parentPath, _fileName);
             if (!_fsManager.NodeExists(fullPath))
             {
+                _fsManager.RmFile(oldPath);
                 _fsManager.CreateFile(fullPath, Encoding.UTF8.GetBytes(textBox1.Text));
                 Close();
-            } else
+            }
+            else
             {
                 errText.Visible = true;
                 errText.Text = Messages.AlreadyExists;

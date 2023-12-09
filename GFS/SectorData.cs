@@ -140,7 +140,7 @@ public class SectorData : StreamArray
         }
 
 
-        if (sectorIds != null && sectorIds[^1] > getLastWrittenSector())
+        if (sectorIds != null && sectorIds.Length != 0 && sectorIds[^1] > getLastWrittenSector())
         {
             UpdateLastWrittenSector(sectorIds[^1]);
         }
@@ -167,7 +167,12 @@ public class SectorData : StreamArray
 
     public byte[] ReadFile(FileSystemNode node)
     {
-        byte[] data = new byte[(node.SectorIds.Count - 1) * _dataSize + node.LastDataIndex];
+        var dataLength = (node.SectorIds.Count - 1) * _dataSize + node.LastDataIndex;
+        if (dataLength <= 0)
+        {
+            return Array.Empty<byte>();
+        }
+        byte[] data = new byte[dataLength];
         int lastId = 0;
         for (var index = 0; index < node.SectorIds.Count - 1; index++)
         {

@@ -384,7 +384,8 @@ public class Program
         return true;
     }
 
-    private static bool CreateCommand(string[] command, FileSystemManager fileSystemManager) {
+    private static bool CreateCommand(string[] command, FileSystemManager fileSystemManager)
+    {
         if (command.Length != 4)
         {
             Console.Error.WriteLine(Messages.InvalidArgumentList);

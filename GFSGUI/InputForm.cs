@@ -1,7 +1,5 @@
 ﻿using GFS;
 using GFS.DTO;
-using GFS.helper;
-using System.Diagnostics.Eventing.Reader;
 
 namespace GFSGUI
 {
@@ -22,9 +20,10 @@ namespace GFSGUI
             {
                 textBox1.Text = node.Name;
                 writeBtn.Text = "Rename";
-            } else
+            }
+            else
             {
-               writeBtn.Text = "Create";
+                writeBtn.Text = "Create";
             }
         }
 
@@ -36,7 +35,7 @@ namespace GFSGUI
             switch (_operation)
             {
                 case InputFormOperationEnum.Mkdir:
-                    operationResult = _fileSystemManager.Mkdir(_fileSystemNode.Path,text);
+                    operationResult = _fileSystemManager.Mkdir(_fileSystemNode.Path, text);
                     break;
                 case InputFormOperationEnum.Rename:
                     if (_fileSystemNode != null)
@@ -48,7 +47,8 @@ namespace GFSGUI
             if (operationResult.Success)
             {
                 Close();
-            } else
+            }
+            else
             {
                 label2.Text = operationResult.Message;
                 label2.Visible = true;
