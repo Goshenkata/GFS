@@ -1,6 +1,7 @@
 using GFS.DTO;
 using GFS.helper;
 using GFS.Structures;
+using System.Diagnostics;
 using System.Text;
 
 namespace GFS;
@@ -60,6 +61,7 @@ public class FileSystemManager
         _fsData.LoadFs();
 
         _sectorData = new SectorData(sectorOffset + 1, maxSize, _fs, _bw, _br, sectorSize);
+        _sectorData.CreateSectorData();
         return new OperationResult() { Success = true, Message = "" };
     }
 
@@ -76,7 +78,9 @@ public class FileSystemManager
         long sectorOffset = _maxFsSizeInBytes / 10;
         _fsData = new FilesystemData(FsDataOffset, sectorOffset, _fs, _bw, _br);
         _fsData.LoadFs();
+
         _sectorData = new SectorData(sectorOffset + 1, _maxFsSizeInBytes, _fs, _bw, _br, _sectorSizeInBytes);
+        _sectorData.LoadSectorData();
 
         //todo fix this bitch
         MyList<int> visitedSectors = new MyList<int>();
@@ -198,7 +202,9 @@ public class FileSystemManager
     public bool CreateFile(string filePath, byte[] data)
     {
         var node = _fsData.GetNodeByPath(filePath);
+
         var writeFileDto = _sectorData.WriteFile(data);
+
         if (writeFileDto.IsCorrupted)
             return false;
         if (node == null)
@@ -288,7 +294,6 @@ public class FileSystemManager
 
     public void PrintSectorInfo(int sector)
     {
-        Console.WriteLine("last written sector: " + _sectorData.getLastWrittenSector());
         Console.WriteLine(_sectorData.GetSector(sector));
     }
 

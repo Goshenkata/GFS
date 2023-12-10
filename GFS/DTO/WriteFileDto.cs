@@ -11,4 +11,13 @@ public class WriteFileDto
         Sectors = sectors;
         LastDataIndex = lastDataIndex;
     }
+    public override string ToString()
+    {
+        var sector = "";
+        foreach (var item in Sectors)
+        {
+            sector += item + " ";   
+        }
+        return $"lastDataIndx: {LastDataIndex}\n sectors: {sector}\n is corrupter: {IsCorrupted}";
+    }
 }

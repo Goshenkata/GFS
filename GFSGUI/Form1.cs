@@ -4,11 +4,8 @@ using GFS.helper;
 using GFS.Structures;
 namespace GFSGUI
 {
-    // todo going back and forth in history does not update buttons
-    // todo file stream random closing
-    // todo improve import performance for large files
-    // todo free memory doesnt work exactly find out tf it was
-    //todo lock file name control in write file
+    //todo remove stopwatch
+    //todo more performance improvement
     public partial class Form1 : Form
     {
         FileSystemManager _fsManager;
@@ -242,6 +239,7 @@ namespace GFSGUI
         {
             _prevStack.Push(_fsManager.CurrentPath);
             _fsManager.CurrentPath = _forwardStack.Pop();
+            UpdateSelectedNode(null);
             UpdateListView();
             UpdateHistoryButtonsState();
 

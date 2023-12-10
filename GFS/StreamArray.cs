@@ -18,22 +18,4 @@ public abstract class StreamArray
         this._dataStart = dataStart;
         this._dataEnd = dataEnd;
     }
-
-    public void Flush()
-    {
-        try
-        {
-            _fs.Flush();
-            _br.Close();
-            _bw.Close();
-            _fs.Close();
-        }
-        catch (Exception e) { }
-        finally
-        {
-            _fs = new FileStream(FileSystemManager.DataFilepath, FileMode.Open, FileAccess.ReadWrite);
-            _br = new BinaryReader(_fs);
-            _bw = new BinaryWriter(_fs);
-        }
-    }
 }
