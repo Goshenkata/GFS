@@ -1,5 +1,6 @@
 using GFS.DTO;
 using GFS.helper;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 
 namespace GFS;
@@ -100,11 +101,11 @@ public class SectorData : StreamArray
 
         long totalTimeForTask = 0;
 
-        sw2.Start();    
+        sw2.Start();
         for (int i = 0; i < data.Length; i += _dataSize)
         {
-
             sw.Restart();
+
             //before writing check if sectorData matches anything
             var count = Math.Min(data.Length - i, _dataSize);
             lastSectorIndexData = count;
@@ -148,17 +149,15 @@ public class SectorData : StreamArray
                 return new WriteFileDto(Array.Empty<int>(), 0, true);
             }
 
+            sw.Stop();
             //write the hash
             _fs.Seek(GetStartOfSectorIndex(sector), SeekOrigin.Begin);
             _bw.Write(hash);
 
-            sw.Stop();
-            totalTimeForTask += sw.ElapsedMilliseconds;
+            totalTimeForTask += sw.ElapsedTicks;
         }
-
-        sw2.Stop();    
-
-        long totalTime = sw2.ElapsedMilliseconds;
+        sw2.Stop();
+        long totalTime = sw2.ElapsedTicks;
         Debug.WriteLine($"Total time for task {totalTimeForTask}");
         Debug.WriteLine($"Total time {totalTime}");
         Debug.WriteLine($"Diff in time {totalTime - totalTimeForTask}");
@@ -356,10 +355,14 @@ public class SectorData : StreamArray
     public void LoadSectorData()
     {
         _fs.Seek(_dataStart, SeekOrigin.Begin);
-        for (int i = 0; i <= _lastSectorId; i++)
+        for (int i = 0; i <= _lastWrittenSector; i++)
         {
             _isFreeBitmap[i] = _br.ReadBoolean();
-        }
+        } 
+        for (int i = _lastWrittenSector + 1; i <= _lastSectorId; i++)
+        {
+            _isFreeBitmap[i] = true;
+        } 
     }
 
     public void CreateSectorData()

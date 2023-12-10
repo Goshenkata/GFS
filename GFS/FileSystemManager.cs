@@ -81,30 +81,6 @@ public class FileSystemManager
 
         _sectorData = new SectorData(sectorOffset + 1, _maxFsSizeInBytes, _fs, _bw, _br, _sectorSizeInBytes);
         _sectorData.LoadSectorData();
-
-        //todo fix this bitch
-        MyList<int> visitedSectors = new MyList<int>();
-        foreach (var node1 in _fsData._root)
-        {
-            if (node1.IsDirectory) continue;
-
-            foreach (var node1Sector in node1.SectorIds)
-            {
-                if (visitedSectors.Contains(node1Sector)) continue;
-                visitedSectors.AddLast(node1Sector);
-                foreach (var node2 in _fsData._root)
-                {
-                    if (node2.IsDirectory) continue;
-                    if (node1.Equals(node2)) continue;
-                    if (node2.SectorIds.Contains(node1Sector))
-                    {
-                        var files = new MyList<string>();
-                        files.AddLast(node1.Path + node1.Name);
-                        files.AddLast(node2.Path + node2.Name);
-                    }
-                }
-            }
-        }
     }
     public void WriteMetadata()
     {
