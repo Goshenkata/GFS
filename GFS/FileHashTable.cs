@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace GFS
     public class FileHashTable : StreamArray
     {
         private int _lastHashIndex = 0;
+        private long _totalNumberOfSectors = 0;
         public int LastHashIndex
         {
             get { return _lastHashIndex; }
@@ -20,39 +22,77 @@ namespace GFS
             }
         }
 
-        private const long OFFSET = sizeof(long);
-        private const long ELEMENT_SIZE = sizeof(long) + sizeof(int);
+        public static  long OFFSET = sizeof(long);
+        public static long ELEMENT_SIZE = sizeof(long) + sizeof(int);
 
-        struct HashSectorIndxPair
+        public struct HashSectorIndxPair
         {
             public long Hash;
             public int Index;
         }
-        public FileHashTable(long dataStart, long dataEnd, FileStream fs, BinaryWriter bw, BinaryReader br) : base(dataStart, dataEnd, fs, bw, br)
+        public FileHashTable(long totalNumberOfSectors,long dataStart, long dataEnd, FileStream fs, BinaryWriter bw, BinaryReader br) : base(dataStart, dataEnd, fs, bw, br)
         {
             _fs.Seek(dataStart, SeekOrigin.Begin);
             _lastHashIndex = _br.ReadInt32();
+            _totalNumberOfSectors = totalNumberOfSectors; 
         }
         public int getIdWithSameHash(long hash)
         {
-            BinarySearch(hash, 0, LastHashIndex);
+            var result = BinarySearch(hash, 0, LastHashIndex);
+            if (result == -1)
+            {
+                return -1;
+            }
             return _br.ReadInt32();
+        }
+        public void RemoveHash(long hash)
+        {
+            int removePosition = FindInsertPosition(hash);
+            if (removePosition == -1) {
+                return;
+            }
+
+
+            for (int i = removePosition + 1; i <= LastHashIndex; i++)
+            {
+                _fs.Seek(_dataStart + OFFSET + i * ELEMENT_SIZE, SeekOrigin.Begin);
+                long currentHash = _br.ReadInt64();
+                int currentIndx = _br.ReadInt32();
+                _fs.Seek( -2 * ELEMENT_SIZE, SeekOrigin.Current);
+                _bw.Write(currentHash);
+                _bw.Write(currentIndx);
+            }
+            LastHashIndex = _lastHashIndex - 1;
         }
         public void SaveHash(long hash, int index)
         {
             int insertPosition = FindInsertPosition(hash);
-            if (insertPosition == -1) {
-                return; 
+
+            if (insertPosition == -1)
+            {
+                return;
             }
-            _fs.Seek(_dataStart + OFFSET + LastHashIndex * ELEMENT_SIZE, SeekOrigin.Begin);
-            for (int i = LastHashIndex; i >= insertPosition; i++) {
-                long currentHash = _br.ReadInt64();
-                int currentIndx = _br.ReadInt32();
-                _bw.Write(currentHash);
-                _bw.Write(currentIndx);
-                //after shigting by one, go back on the previous element before the move
-                _fs.Seek(-3 * ELEMENT_SIZE, SeekOrigin.Current);
+
+            // Calculate the number of elements to shift
+            int elementsToShift = LastHashIndex - insertPosition;
+
+            if (elementsToShift > 0)
+            {
+            // Read the data to be shifted
+            _fs.Seek(_dataStart + OFFSET + insertPosition * ELEMENT_SIZE, SeekOrigin.Begin);
+            byte[] dataToShift = new byte[elementsToShift * ELEMENT_SIZE];
+            _fs.Read(dataToShift, 0, dataToShift.Length);
+
+            // Write the shifted data
+            _fs.Seek(_dataStart + OFFSET + (insertPosition + 1) * ELEMENT_SIZE, SeekOrigin.Begin);
+            _fs.Write(dataToShift, 0, dataToShift.Length);
             }
+
+            // Write the new hash at the correct position
+            _fs.Seek(_dataStart + OFFSET + insertPosition * ELEMENT_SIZE, SeekOrigin.Begin);
+            _bw.Write(hash);
+            _bw.Write(index);
+            LastHashIndex = _lastHashIndex + 1;
         }
 
         private int FindInsertPosition(long hash)
@@ -101,6 +141,30 @@ namespace GFS
                 return BinarySearch(hash, mid + 1, end);
             }
         }
-    }
 
+        public HashSectorIndxPair GetBySectorId(int sectorId)
+        {
+            _fs.Seek(_dataStart + OFFSET, SeekOrigin.Begin);
+            for (int i = 0; i <= LastHashIndex; i++)
+            {
+                long hash = _br.ReadInt64();
+                int curSectorID = _br.ReadInt32();
+                if (curSectorID == sectorId)
+                {
+                    return new HashSectorIndxPair { Hash = hash, Index = curSectorID };
+                }
+            }
+            return new HashSectorIndxPair { Hash = -1, Index = -1 };
+        }
+        public void InitData()
+        {
+            _fs.Seek(_dataStart, SeekOrigin.Begin);
+            _bw.Write(0L);
+            for (int i = 0; i < _totalNumberOfSectors; i++)
+            {
+                _bw.Write(-1L);
+                _bw.Write(-1);
+            }
+        }
+    }
 }

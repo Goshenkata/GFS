@@ -6,6 +6,8 @@ namespace GFSGUI
 {
     //todo remove stopwatch
     //todo more performance improvement
+    //todo do not allow writing empty files bug
+    // write file bug
     public partial class Form1 : Form
     {
         FileSystemManager _fsManager;

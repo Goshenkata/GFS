@@ -12,20 +12,32 @@ public class SectorData : StreamArray
     private int _dataSize;
     private int _lastSectorId;
     private long _sectorsStart;
+
     private bool[] _isFreeBitmap;
+
     private int _lastWrittenSector;
+    private FileHashTable _hashTable;
 
     public SectorData(long dataStart, long dataEnd, FileStream fs, BinaryWriter bw, BinaryReader br,
         int sectorSize) : base( dataStart, dataEnd, fs, bw, br)
     {
         _sectorSize = sectorSize;
-        _dataSize = sectorSize - sizeof(long);
+        //todo remove this
+        _dataSize = sectorSize;
+
+        
+        //the data will look  like this:
+        // dataStart -> |..bitmapSize..|..hashTable..|......sectors.....| <-dataEnd
 
         //the total number of sectors that can fit;
         long totalNumberOfSectors = (int)Math.Floor((double)(dataEnd - dataStart) / sectorSize) - 1;
-        long bitmapSize = sizeof(bool) *  totalNumberOfSectors;
 
-        _sectorsStart = dataStart + bitmapSize;
+        long bitmapSize = sizeof(bool) *  totalNumberOfSectors;
+        long hashTableSize = FileHashTable.OFFSET + FileHashTable.ELEMENT_SIZE * totalNumberOfSectors;
+        _hashTable = new FileHashTable(totalNumberOfSectors, _dataStart + bitmapSize, dataStart + hashTableSize, _fs, _bw, _br);
+
+        _sectorsStart = dataStart + bitmapSize + hashTableSize + 8;
+
         _lastSectorId = (int)Math.Floor((double)(dataEnd - _sectorsStart) / sectorSize) - 1;
 
         _isFreeBitmap = new bool[_lastSectorId + 1];
@@ -58,8 +70,8 @@ public class SectorData : StreamArray
         _fs.Seek(GetStartOfSectorIndex(sectorId), SeekOrigin.Begin);
         SectorNode sectorNode = new SectorNode();
         sectorNode.isFree = _isFreeBitmap[sectorId];
-        sectorNode.hash = _br.ReadInt64();
         sectorNode.data = _br.ReadBytes(_dataSize);
+        sectorNode.hash = _hashTable.GetBySectorId(sectorId).Hash;
         return sectorNode;
     }
 
@@ -68,7 +80,7 @@ public class SectorData : StreamArray
         _fs.Seek(GetStartOfSectorIndex(sectorId), SeekOrigin.Begin);
         var sectorNode = new SectorMetadataDTO();
         sectorNode.IsTaken = _br.ReadBoolean();
-        sectorNode.Hash = _br.ReadInt64();
+        sectorNode.Hash = _hashTable.GetBySectorId(sectorId).Hash;
         return sectorNode;
     }
 
@@ -168,8 +180,7 @@ public class SectorData : StreamArray
 
             sw.Restart();
             //write the hash
-            _fs.Seek(GetStartOfSectorIndex(sector), SeekOrigin.Begin);
-            _bw.Write(hash);
+            _hashTable.SaveHash(hash, sector);
             sw.Stop();
             times[5] += sw.ElapsedTicks;
         }
@@ -196,18 +207,7 @@ public class SectorData : StreamArray
 
     public int GetSectorIdWithSameHash(long hash)
     {
-        var lastWrittenSector = getLastWrittenSector();
-        for (int i = 0; i <= lastWrittenSector; i++)
-        {
-            _fs.Seek(GetStartOfSectorIndex(i), SeekOrigin.Begin);
-            if (!_isFreeBitmap[i])
-            {
-                if (_br.ReadInt64() == hash)
-                    return i;
-            }
-        }
-
-        return -1;
+        return _hashTable.getIdWithSameHash(hash);
     }
 
     public byte[] ReadFile(FileSystemNode node)
@@ -246,8 +246,6 @@ public class SectorData : StreamArray
         byte[] lastSectorData = new byte[node.LastDataIndex];
         for (int i = 0; i < node.LastDataIndex; i++)
         {
-            if (lastSector.isFree)
-                Console.Error.WriteLine("Reading from free sector");
             data[lastId++] = lastSector.data[i];
             lastSectorData[i] = lastSector.data[i];
         }
@@ -273,6 +271,9 @@ public class SectorData : StreamArray
     {
         _fs.Seek(_dataStart + sectorId * sizeof(bool), SeekOrigin.Begin);
         _bw.Write(true);
+
+        var hash = _hashTable.GetBySectorId(sectorId);
+        _hashTable.RemoveHash(hash.Hash);
         //update lastWrittenSector;
         var lastWrittenSector = getLastWrittenSector();
         if (sectorId == lastWrittenSector)
@@ -328,8 +329,7 @@ public class SectorData : StreamArray
                     var newSector = TakeNextAvalableSector();
                     node.SectorIds[^1] = newSector;
 
-                    _fs.Seek(GetStartOfSectorIndex(newSector), SeekOrigin.Begin);
-                    _bw.Write(afterAppendHash);
+                    _hashTable.SaveHash(afterAppendHash, newSector);
 
                     _fs.Seek(GetStartOfDataIndex(newSector), SeekOrigin.Begin);
                     _bw.Write(fullNewData);
@@ -345,6 +345,7 @@ public class SectorData : StreamArray
                 {
                     _fs.Seek(GetStartOfSectorIndex(lastSectorId), SeekOrigin.Begin);
                     _bw.Write(afterAppendHash);
+                    _hashTable.SaveHash(afterAppendHash, lastSectorId);
 
                     _fs.Seek(GetStartOfDataIndex(lastSectorId), SeekOrigin.Begin);
                     _bw.Write(fullNewData);
@@ -397,6 +398,7 @@ public class SectorData : StreamArray
             _bw.Write(true);
             _isFreeBitmap[i] = true;
         }
+        _hashTable.InitData();
         Console.WriteLine();
     }
 }

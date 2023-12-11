@@ -43,7 +43,7 @@ namespace GFSGUI
 
             var fullPath = _parentPath + textBox2.Text;
             var oldPath = StringHelper.ConcatPath(_parentPath, _fileName);
-            if (!_fsManager.NodeExists(fullPath))
+            if (_fsManager.NodeExists(fullPath))
             {
                 _fsManager.RmFile(oldPath);
                 _fsManager.CreateFile(fullPath, Encoding.UTF8.GetBytes(textBox1.Text));
@@ -51,8 +51,8 @@ namespace GFSGUI
             }
             else
             {
-                errText.Visible = true;
-                errText.Text = Messages.AlreadyExists;
+                _fsManager.CreateFile(fullPath, Encoding.UTF8.GetBytes(textBox1.Text));
+                Close();
             }
         }
 
