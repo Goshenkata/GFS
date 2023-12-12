@@ -9,7 +9,7 @@ namespace GFS
 {
     public class FileHashTable : StreamArray
     {
-        private int _lastHashIndex = 0;
+        private int _lastHashIndex = -1;
         private long _totalNumberOfSectors = 0;
         public int LastHashIndex
         {
@@ -73,6 +73,7 @@ namespace GFS
                 return;
             }
 
+            LastHashIndex = _lastHashIndex + 1;
             // Calculate the number of elements to shift
             int elementsToShift = LastHashIndex - insertPosition;
 
@@ -92,7 +93,6 @@ namespace GFS
             _fs.Seek(_dataStart + OFFSET + insertPosition * ELEMENT_SIZE, SeekOrigin.Begin);
             _bw.Write(hash);
             _bw.Write(index);
-            LastHashIndex = _lastHashIndex + 1;
         }
 
         private int FindInsertPosition(long hash)
@@ -107,7 +107,7 @@ namespace GFS
 
                 if (valAtMid == hash)
                 {
-                    return -1;
+                    return mid;
                 }
                 else if (valAtMid < hash)
                 {
@@ -133,7 +133,7 @@ namespace GFS
             if (value == hash)
             {
                 return mid;
-            } else if (value > hash)
+            } else if (value.CompareTo(hash) > 0)
             {
                 return BinarySearch(hash, start, mid - 1); ;
             } else
@@ -159,11 +159,21 @@ namespace GFS
         public void InitData()
         {
             _fs.Seek(_dataStart, SeekOrigin.Begin);
-            _bw.Write(0L);
+            _bw.Write(-1L);
+            _lastHashIndex = -1;
             for (int i = 0; i < _totalNumberOfSectors; i++)
             {
                 _bw.Write(-1L);
                 _bw.Write(-1);
+            }
+        }
+        public void PrintAll()
+        {
+            _fs.Seek(_dataStart + OFFSET, SeekOrigin.Begin);
+            for (int i =0; i<= LastHashIndex; i++) {
+                var hash = _br.ReadInt64();
+                var indx = _br.ReadInt32();
+                Console.WriteLine($"{i}: {hash} {indx}");
             }
         }
     }

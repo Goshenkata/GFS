@@ -41,17 +41,36 @@ namespace GFSGUI
         private void writeBtn_Click(object sender, EventArgs e)
         {
 
+            var data = textBox1.Text;
+
+            if (data == null || data.Length == 0)
+            {
+                errText.Text = Messages.DataEmpty;
+                errText.Visible = true;
+                return;
+            }
+
+            bool isNameValid = StringHelper.IsValidNodeName(textBox2.Text);
+            if (!isNameValid )
+            {
+                errText.Text = Messages.InvalidName;
+                errText.Visible = true;
+                return;
+            }
             var fullPath = _parentPath + textBox2.Text;
             var oldPath = StringHelper.ConcatPath(_parentPath, _fileName);
-            if (_fsManager.NodeExists(fullPath))
+            if (oldPath != fullPath && _fsManager.NodeExists(fullPath))
             {
-                _fsManager.RmFile(oldPath);
-                _fsManager.CreateFile(fullPath, Encoding.UTF8.GetBytes(textBox1.Text));
-                Close();
+                errText.Text = Messages.AlreadyExists;
+                errText.Visible = true;
             }
             else
             {
-                _fsManager.CreateFile(fullPath, Encoding.UTF8.GetBytes(textBox1.Text));
+                if (_fileName != "" && fullPath != oldPath)
+                {
+                    _fsManager.RmFile(oldPath);
+                }
+                _fsManager.CreateFile(fullPath, Encoding.UTF8.GetBytes(data));
                 Close();
             }
         }

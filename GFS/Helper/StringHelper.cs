@@ -150,6 +150,10 @@ public class StringHelper
     public static bool IsValidNodeName(string nodeName)
     {
         //starts with letterOrDigit
+        if (nodeName == null)
+            return false;
+        if (nodeName.Length == 0)
+            return false;
         if (!CharHelper.isLetterOrDigit(nodeName[0]))
             return false;
         //cannot end with dot
@@ -159,7 +163,7 @@ public class StringHelper
         for (var index = 1; index < nodeName.Length; index++)
         {
             var c = nodeName[index];
-            if (!(CharHelper.isLetterOrDigit(c) || c == '-' || c == '.' || c == '_'))
+            if (!(CharHelper.isLetterOrDigit(c) || c == '-' || c == '.' || c == '_' || c == ' '))
             {
                 return false;
             }

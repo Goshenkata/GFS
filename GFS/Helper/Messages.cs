@@ -47,4 +47,5 @@ public static class Messages
     public const string InvalidName = "Invalid name";
     public const string AlreadyExists = "This node already exists";
     public const string NothingSelected = "Nothing is selected";
+    public const string DataEmpty = "Data is empty";
 }

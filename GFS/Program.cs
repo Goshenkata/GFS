@@ -8,6 +8,29 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        /*
+        FileStream fs = new FileStream("hashTable", FileMode.Create,FileAccess.ReadWrite);
+        BinaryReader br = new BinaryReader(fs);
+        BinaryWriter bw = new BinaryWriter(fs);
+        fs.SetLength(1000000);
+        FileHashTable hashTable = new FileHashTable(100, 0, 1000000, fs, bw, br);
+        hashTable.InitData();
+        hashTable.SaveHash(5L, 1);
+        hashTable.SaveHash(2L, 2);
+        hashTable.SaveHash(10L, 3);
+        hashTable.SaveHash(-29L, 4);
+        hashTable.SaveHash(-12L, 5);
+        
+        hashTable.PrintAll();
+
+        hashTable.RemoveHash(-12L);
+        var id = hashTable.getIdWithSameHash(2L);
+        Console.WriteLine($"the id with hash 2L is {id}");
+        var d= hashTable.GetBySectorId(3);
+        Console.WriteLine($"getBySectorId({d.Index}) has hash {d.Hash}");
+        hashTable.PrintAll();
+        */
+
         FileSystemManager fileSystemManager = new FileSystemManager();
 
         //Enter interactive mode if no arguments passed;
@@ -247,6 +270,11 @@ public class Program
         }
         else if (command.Length >= 3)
             data = command[2];
+
+        if (data == null || data.Length == 0)
+        {
+            Console.WriteLine(Messages.DataEmpty);
+        }
 
         filePath = ResolveToFullPath(filePath, fileSystemManager);
         if (isAppend && fileSystemManager.FileExists(filePath))

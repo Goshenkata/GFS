@@ -34,7 +34,7 @@ public class SectorData : StreamArray
 
         long bitmapSize = sizeof(bool) *  totalNumberOfSectors;
         long hashTableSize = FileHashTable.OFFSET + FileHashTable.ELEMENT_SIZE * totalNumberOfSectors;
-        _hashTable = new FileHashTable(totalNumberOfSectors, _dataStart + bitmapSize, dataStart + hashTableSize, _fs, _bw, _br);
+        _hashTable = new FileHashTable(totalNumberOfSectors, _dataStart + bitmapSize, dataStart + bitmapSize + hashTableSize, _fs, _bw, _br);
 
         _sectorsStart = dataStart + bitmapSize + hashTableSize + 8;
 
@@ -109,36 +109,20 @@ public class SectorData : StreamArray
         var lastId = 0;
         int lastSectorIndexData = 0;
 
-        var sw = new Stopwatch();
-        var sw2 = new Stopwatch();
-
-        long[] times = new long[6];
-        Array.Fill<long>(times, 0);
-
-        sw2.Start();
         for (int i = 0; i < data.Length; i += _dataSize)
         {
-            sw.Restart();
 
             //before writing check if sectorData matches anything
             var count = Math.Min(data.Length - i, _dataSize);
             lastSectorIndexData = count;
             var subData = ArrayHelper<byte>.subArray(data, i, i + count);
 
-            sw.Stop();
-            times[0] += sw.ElapsedTicks;
-
-
-            sw.Restart();
             var hash = ComputeDataHash(subData);
 
             int sector = TakeNextAvalableSector();
 
             sectorIds[lastId++] = sector;
-            sw.Stop();
-            times[1] += sw.ElapsedTicks;
 
-            sw.Restart();
             var matchingSector = GetSectorIdWithSameHash(hash);
             if (matchingSector != -1)
             {
@@ -146,11 +130,7 @@ public class SectorData : StreamArray
                 sectorIds[lastId - 1] = matchingSector;
                 continue;
             }
-            sw.Stop();
-            times[2] += sw.ElapsedTicks;
 
-
-            sw.Restart();
             //if there are no more available sectors, free all the sectors and return an empty array
             if (sector == -1)
             {
@@ -162,10 +142,7 @@ public class SectorData : StreamArray
             var startOfDataIndex = GetStartOfDataIndex(sector);
             _fs.Seek(startOfDataIndex, SeekOrigin.Begin);
             _bw.Write(subData);
-            sw.Stop();
-            times[3] += sw.ElapsedTicks;
 
-            sw.Restart();
             //check if the data has been written correctly
             _fs.Seek(startOfDataIndex, SeekOrigin.Begin);
             var writtenDataHash = ComputeDataHash(_br.ReadBytes(count));
@@ -175,27 +152,9 @@ public class SectorData : StreamArray
                 Free(sectorIds);
                 return new WriteFileDto(Array.Empty<int>(), 0, true);
             }
-            sw.Stop();
-            times[4] += sw.ElapsedTicks;
-
-            sw.Restart();
             //write the hash
             _hashTable.SaveHash(hash, sector);
-            sw.Stop();
-            times[5] += sw.ElapsedTicks;
         }
-        sw2.Stop();
-        long totalTime = sw2.ElapsedTicks;
-        long totalTimeForTasks = 0;
-        for (int i = 0; i < times.Length; i++)
-        {
-            totalTimeForTasks += times[i];
-            Debug.WriteLine($"{i}: {times[i]}");
-        }
-        Debug.WriteLine($"Total time for task {totalTimeForTasks}");
-        Debug.WriteLine($"Total time {totalTime}");
-        Debug.WriteLine($"Diff in time {totalTime - totalTimeForTasks}");
-
 
         if (sectorIds != null && sectorIds.Length != 0 && sectorIds[^1] > getLastWrittenSector())
         {

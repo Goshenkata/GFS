@@ -163,9 +163,6 @@ public class FileSystemManager
     {
         var node = _fsData.GetNodeByPath(filePath);
         int[] newSectors = _sectorData.AppendToFile(data, ref node);
-        _fsData._fs = _sectorData._fs;
-        _fsData._br = _sectorData._br;
-        _fsData._bw = _sectorData._bw;
         if (newSectors.Length > 0)
         {
             node.SectorIds.AddLast(newSectors);
@@ -180,6 +177,12 @@ public class FileSystemManager
         var node = _fsData.GetNodeByPath(filePath);
 
         var writeFileDto = _sectorData.WriteFile(data);
+
+        if (data.Length == 0)
+        {
+            data = new byte[1];
+            data[0] = 0;
+        }
 
         if (writeFileDto.IsCorrupted)
             return false;

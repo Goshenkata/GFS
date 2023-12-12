@@ -1,5 +1,6 @@
 ﻿using GFS;
 using GFS.DTO;
+using GFS.helper;
 
 namespace GFSGUI
 {
@@ -35,7 +36,12 @@ namespace GFSGUI
             switch (_operation)
             {
                 case InputFormOperationEnum.Mkdir:
-                    operationResult = _fileSystemManager.Mkdir(_fileSystemNode.Path, text);
+                    string pat = "/";
+                    if (_fileSystemNode != _fileSystemManager.GetNode("/"))
+                    {
+                        pat = StringHelper.ConcatPath(_fileSystemNode.Path, _fileSystemNode.Name);
+                    }
+                    operationResult = _fileSystemManager.Mkdir(pat, text);
                     break;
                 case InputFormOperationEnum.Rename:
                     if (_fileSystemNode != null)
