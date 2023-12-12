@@ -126,7 +126,7 @@ public class SectorData : StreamArray
             var matchingSector = GetSectorIdWithSameHash(hash);
             if (matchingSector != -1)
             {
-                Free(sectorIds[lastId - 1]);
+                Free(sectorIds[lastId - 1], true);
                 sectorIds[lastId - 1] = matchingSector;
                 continue;
             }
@@ -154,6 +154,7 @@ public class SectorData : StreamArray
             }
             //write the hash
             _hashTable.SaveHash(hash, sector);
+            _hashTable.PrintAll();
         }
 
         if (sectorIds != null && sectorIds.Length != 0 && sectorIds[^1] > getLastWrittenSector())
@@ -222,17 +223,20 @@ public class SectorData : StreamArray
     {
         foreach (var sector in sectors)
         {
-            Free(sector);
+            Free(sector, false);
         }
     }
 
-    public void Free(int sectorId)
+    public void Free(int sectorId, bool hasDuplicate)
     {
         _fs.Seek(_dataStart + sectorId * sizeof(bool), SeekOrigin.Begin);
         _bw.Write(true);
 
-        var hash = _hashTable.GetBySectorId(sectorId);
-        _hashTable.RemoveHash(hash.Hash);
+        if (!hasDuplicate)
+        {
+            var hash = _hashTable.GetBySectorId(sectorId);
+            _hashTable.RemoveHash(hash.Hash);
+        }
         //update lastWrittenSector;
         var lastWrittenSector = getLastWrittenSector();
         if (sectorId == lastWrittenSector)
@@ -276,7 +280,7 @@ public class SectorData : StreamArray
             {
                 node.SectorIds[^1] = repeatSector;
                 lastSectorId = repeatSector;
-                Free(lastSectorId);
+                Free(lastSectorId, true);
             }
             else
             {

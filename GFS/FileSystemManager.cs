@@ -264,7 +264,7 @@ public class FileSystemManager
             //Free if the sector does not have duplicates, skip itself
             if (!_fsData.sectorHasDuplicates(sectorId, file))
             {
-                _sectorData.Free(sectorId);
+                _sectorData.Free(sectorId, false);
             }
         }
 

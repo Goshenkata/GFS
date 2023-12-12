@@ -4,6 +4,7 @@ using GFS.helper;
 using GFS.Structures;
 namespace GFSGUI
 {
+    //no node name validation write in cli
     public partial class Form1 : Form
     {
         FileSystemManager _fsManager;
@@ -55,6 +56,7 @@ namespace GFSGUI
                 _fsManager.LoadFs();
             }
             InitializeComponent();
+            flowLayoutPanel1.Controls.Clear();
 
             UpdateSelectedNode(_fsManager.GetNode("/"));
             UpdateListView();
@@ -298,9 +300,6 @@ namespace GFSGUI
             flowLayoutPanel1.Controls.Clear();
             flowLayoutPanel1.Controls.Add(goBackButton);
             flowLayoutPanel1.Controls.Add(forwardButton);
-            flowLayoutPanel1.Controls.Add(button1);
-            flowLayoutPanel1.Controls.Add(button3);
-            flowLayoutPanel1.Controls.Add(button2);
             _selectedNode = node;
             if (node != null)
             {
@@ -327,6 +326,10 @@ namespace GFSGUI
                     rmdirBtn.Text = "rmdir";
                     rmdirBtn.Click += rmDirBtnClick;
                     buttons.AddLast(rmdirBtn);
+
+                    flowLayoutPanel1.Controls.Add(button1);
+                    flowLayoutPanel1.Controls.Add(button3);
+                    flowLayoutPanel1.Controls.Add(button2);
                 }
                 else
                 {
