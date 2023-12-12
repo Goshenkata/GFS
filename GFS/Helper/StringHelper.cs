@@ -160,10 +160,10 @@ public class StringHelper
         if (nodeName[nodeName.Length - 1] == '.')
             return false;
 
-        for (var index = 1; index < nodeName.Length; index++)
+        for (var index = 0; index < nodeName.Length; index++)
         {
             var c = nodeName[index];
-            if (!(CharHelper.isLetterOrDigit(c) || c == '-' || c == '.' || c == '_' || c == ' '))
+            if (!(CharHelper.isLetterOrDigit(c) || c == '-' || c == '.' || c == '_'))
             {
                 return false;
             }
