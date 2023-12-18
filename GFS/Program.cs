@@ -30,7 +30,7 @@ public class Program
         fsData.PrintTree(0, fsData.LoadById(0));
         return;
         */
-
+        //todo remove
         FileSystemManager fileSystemManager = new FileSystemManager();
 
         //Enter interactive mode if no arguments passed;

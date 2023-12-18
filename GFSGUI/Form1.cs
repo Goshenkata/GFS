@@ -2,6 +2,7 @@ using GFS;
 using GFS.DTO;
 using GFS.helper;
 using GFS.Structures;
+using System.Diagnostics;
 namespace GFSGUI
 {
     //no node name validation write in cli
@@ -18,10 +19,12 @@ namespace GFSGUI
             {
                 if (dirOnly)
                 {
+                    Debug.WriteLine(_fsManager.CurrentPath);
                     return _fsManager.GetNode(_fsManager.CurrentPath);
                 }
                 return null;
             }
+            Debug.WriteLine(_selectedNodePath);
             return _fsManager._fsData.GetNodeByPath(_selectedNodePath);
         }
 
@@ -83,9 +86,12 @@ namespace GFSGUI
                     TreeNode newNode = new TreeNode(child.Name);
                     newNode.ImageIndex = ResolveImageId(child);
                     newNode.SelectedImageIndex = ResolveImageId(child);
-                    if (_fsManager._fsData.GetChildren(child).Count > 0)
+                    if (child.IsDirectory)
                     {
-                        newNode.Nodes.Add(new TreeNode());
+                        if (_fsManager._fsData.GetChildren(child).Count > 0)
+                        {
+                            newNode.Nodes.Add(new TreeNode());
+                        }
                     }
                     treeNodeToLoad.Nodes.Add(newNode);
                 }
@@ -302,9 +308,9 @@ namespace GFSGUI
             flowLayoutPanel1.Controls.Clear();
             flowLayoutPanel1.Controls.Add(goBackButton);
             flowLayoutPanel1.Controls.Add(forwardButton);
-            _selectedNodePath = _fsManager.ResolvePath(node);
             if (node != null)
             {
+                _selectedNodePath = _fsManager.ResolvePath(node);
                 var size = new Size(63, 35);
                 MyList<Button> buttons = new MyList<Button>();
 

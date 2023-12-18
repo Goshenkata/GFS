@@ -134,7 +134,7 @@ public class SectorData : StreamArray
             if (sector == -1)
             {
                 Free(sectorIds);
-                return new WriteFileDto(Array.Empty<int>(), 0);
+                //return new WriteFileDto(Array.Empty<int>(), 0);
             }
 
             //go to the free data section of the array
@@ -149,7 +149,7 @@ public class SectorData : StreamArray
             {
                 Console.WriteLine(Messages.CorruptedSector);
                 Free(sectorIds);
-                return new WriteFileDto(Array.Empty<int>(), 0, true);
+                //return new WriteFileDto(Array.Empty<int>(), 0, true);
             }
             //write the hash
             _hashTable.SaveHash(hash, sector);
@@ -188,7 +188,7 @@ public class SectorData : StreamArray
             if (sector.hash != ComputeDataHash(sector.data))
             {
                 Console.WriteLine(Messages.CorruptedSector);
-                return Array.Empty<byte>();
+                //return Array.Empty<byte>();
             }
 
             if (sector.isFree)
@@ -210,12 +210,12 @@ public class SectorData : StreamArray
             lastSectorData[i] = lastSector.data[i];
         }
 
-        if (lastSector.hash != ComputeDataHash(lastSectorData))
+        var hash = ComputeDataHash(lastSectorData);
+        if (lastSector.hash != hash)
         {
             Console.Error.WriteLine($"Sector {sectorIds[^1]} is corrupted");
             return Array.Empty<byte>();
         }
-
         return data;
     }
 

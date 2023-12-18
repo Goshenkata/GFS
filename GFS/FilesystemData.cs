@@ -82,7 +82,7 @@ public class FilesystemData : StreamArray, IEnumerable<FileSystemNode>
             if (_bitmap[i]) 
             {
                 _bitmap[i] = false;
-                _fs.Seek(_dataStart * sizeof(bool)* i , SeekOrigin.Begin);
+                _fs.Seek(_dataStart + sizeof(bool)* i , SeekOrigin.Begin);
                 _bw.Write(false);
                 return i;
             }
@@ -136,7 +136,7 @@ public class FilesystemData : StreamArray, IEnumerable<FileSystemNode>
     public MyList<int> GetChildren(FileSystemNode node)
     {
         byte[] data = _sectorData.ReadFile(node.ChildrenSectorIds, node.LastDataIndexOfChildrenSector);
-        int[] intArray = new int[data.Length / 4];
+        int[] intArray = new int[(int) Math.Ceiling(data.Length *1.0 / 4)];
 
         for (int i = 0; i < intArray.Length; i++)
         {
@@ -226,9 +226,12 @@ public class FilesystemData : StreamArray, IEnumerable<FileSystemNode>
         {
             var current = queue.Dequeue();
             yield return current;
-            foreach (var child in GetChildren(current))
+            if (current.IsDirectory)
             {
-                queue.Enqueue(LoadById(child));
+                foreach (var child in GetChildren(current))
+                {
+                    queue.Enqueue(LoadById(child));
+                }
             }
         }
     }
@@ -260,7 +263,7 @@ public class FilesystemData : StreamArray, IEnumerable<FileSystemNode>
     {
         string indentation = new string('-', level * 2);
 
-        var sectors = current.IsDirectory ? "" : current.ChildrenSectorIds.ToString();
+        var sectors = current.IsDirectory ? "" : GetChildren(current).ToString();
         Console.WriteLine(indentation + current.Name + " " + current.IsDirectory + " " + current.LastDataIndexOfFile + " " + " " + current.IsCorrupted + sectors);
         if (current.IsDirectory)
         {

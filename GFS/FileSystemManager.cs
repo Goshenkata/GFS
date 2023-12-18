@@ -1,6 +1,7 @@
 using GFS.DTO;
 using GFS.helper;
 using GFS.Structures;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace GFS;
@@ -88,7 +89,8 @@ public class FileSystemManager
         {
             return new OperationResult() { Success = false, Message = Messages.InvalidName };
         }
-        if (_fsData.Exists(fullPath))
+        var newPath = StringHelper.ConcatPath(StringHelper.GetParentPath(fullPath), newName);
+        if (_fsData.Exists(newPath))
         {
             return new OperationResult() { Success = false, Message = Messages.AlreadyExists };
         }
@@ -200,24 +202,20 @@ public class FileSystemManager
             Console.WriteLine("File corrupted");
             return false;
         }
-        if (node == null)
+
+        if (node != null)
         {
-            string fileName;
-            string parentPath = StringHelper.GetParentPath(filePath, out fileName);
-            var parentNode = _fsData.GetNodeByPath(parentPath);
-            var newNode = _fsData.CreateNode(fileName, false, parentNode.Indx, writeFileDto.LastDataIndex);
-            var list = new MyList<int>();
-            list.AddLast(writeFileDto.Sectors);
-            _fsData.SetChildren(newNode, list);
+            RmFile(filePath);
         }
-        else
-        {
-            var newSectorsList = new MyList<int>();
-            newSectorsList.AddLast(writeFileDto.Sectors);
-            var children = _fsData.GetChildren(node);
-            children.AddLast(newSectorsList.GetArray());
-            _fsData.SetChildren(node, newSectorsList);
-        }
+
+        string fileName;
+        string parentPath = StringHelper.GetParentPath(filePath, out fileName);
+        var parentNode = _fsData.GetNodeByPath(parentPath);
+        var newNode = _fsData.CreateNode(fileName, false, parentNode.Indx, writeFileDto.LastDataIndex);
+        var list = new MyList<int>();
+        list.AddLast(writeFileDto.Sectors);
+        _fsData.SetChildren(newNode, list);
+
         return true;
     }
 
@@ -308,6 +306,7 @@ public class FileSystemManager
             output = node.Name + "/" + output;
             node = _fsData.LoadById(node.ParentID);
         }
+        output = "/" + output;
         return output;  
 
     }
