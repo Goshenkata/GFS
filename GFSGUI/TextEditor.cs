@@ -33,7 +33,7 @@ namespace GFSGUI
                     MessageBox.Show("The file you are trying to read seems to be corrupted", "File is corrupted",
                         MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
-            } 
+            }
             textBox1.Text = text;
             textBox2.Text = fileName;
         }
@@ -51,7 +51,7 @@ namespace GFSGUI
             }
 
             bool isNameValid = StringHelper.IsValidNodeName(textBox2.Text);
-            if (!isNameValid )
+            if (!isNameValid)
             {
                 errText.Text = Messages.InvalidName;
                 errText.Visible = true;

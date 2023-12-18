@@ -16,7 +16,7 @@ public class WriteFileDto
         var sector = "";
         foreach (var item in Sectors)
         {
-            sector += item + " ";   
+            sector += item + " ";
         }
         return $"lastDataIndx: {LastDataIndex}\n sectors: {sector}\n is corrupter: {IsCorrupted}";
     }

@@ -1,8 +1,6 @@
 using GFS.DTO;
 using GFS.helper;
 using GFS.Structures;
-using System.ComponentModel.Design;
-using System.Diagnostics;
 
 namespace GFS;
 
@@ -18,21 +16,22 @@ public class SectorData : StreamArray
     private int _lastWrittenSector;
     private FileHashTable _hashTable;
 
+
     public SectorData(long dataStart, long dataEnd, FileStream fs, BinaryWriter bw, BinaryReader br,
-        int sectorSize) : base( dataStart, dataEnd, fs, bw, br)
+        int sectorSize) : base(dataStart, dataEnd, fs, bw, br)
     {
         _sectorSize = sectorSize;
         //todo remove this
         _dataSize = sectorSize;
 
-        
+
         //the data will look  like this:
         // dataStart -> |..bitmapSize..|..hashTable..|......sectors.....| <-dataEnd
 
         //the total number of sectors that can fit;
         long totalNumberOfSectors = (int)Math.Floor((double)(dataEnd - dataStart) / sectorSize) - 1;
 
-        long bitmapSize = sizeof(bool) *  totalNumberOfSectors;
+        long bitmapSize = sizeof(bool) * totalNumberOfSectors;
         long hashTableSize = FileHashTable.OFFSET + FileHashTable.ELEMENT_SIZE * totalNumberOfSectors;
         _hashTable = new FileHashTable(totalNumberOfSectors, _dataStart + bitmapSize, dataStart + bitmapSize + hashTableSize, _fs, _bw, _br);
 
@@ -85,7 +84,7 @@ public class SectorData : StreamArray
     }
 
 
-    private int TakeNextAvalableSector()
+    public int TakeNextAvalableSector()
     {
         for (int i = 0; i < _lastSectorId; i++)
         {
@@ -154,7 +153,6 @@ public class SectorData : StreamArray
             }
             //write the hash
             _hashTable.SaveHash(hash, sector);
-            _hashTable.PrintAll();
         }
 
         if (sectorIds != null && sectorIds.Length != 0 && sectorIds[^1] > getLastWrittenSector())
@@ -170,25 +168,26 @@ public class SectorData : StreamArray
         return _hashTable.getIdWithSameHash(hash);
     }
 
-    public byte[] ReadFile(FileSystemNode node)
+
+    //todo check corruption outside
+    public byte[] ReadFile(MyList<int> sectorIds, int lastDataIndex)
     {
-        var dataLength = (node.SectorIds.Count - 1) * _dataSize + node.LastDataIndex;
+        var dataLength = (sectorIds.Count - 1) * _dataSize + lastDataIndex;
         if (dataLength <= 0)
         {
             return Array.Empty<byte>();
         }
         byte[] data = new byte[dataLength];
         int lastId = 0;
-        for (var index = 0; index < node.SectorIds.Count - 1; index++)
+        for (var index = 0; index < sectorIds.Count - 1; index++)
         {
-            var sectorId = node.SectorIds[index];
+            var sectorId = sectorIds[index];
             var sector = GetSector(sectorId);
 
             //check if the sector is corrupted
             if (sector.hash != ComputeDataHash(sector.data))
             {
                 Console.WriteLine(Messages.CorruptedSector);
-                node.IsCorrupted = true;
                 return Array.Empty<byte>();
             }
 
@@ -202,9 +201,10 @@ public class SectorData : StreamArray
             }
         }
 
-        var lastSector = GetSector(node.SectorIds[^1]);
-        byte[] lastSectorData = new byte[node.LastDataIndex];
-        for (int i = 0; i < node.LastDataIndex; i++)
+
+        var lastSector = GetSector(sectorIds[^1]);
+        byte[] lastSectorData = new byte[lastDataIndex];
+        for (int i = 0; i < lastDataIndex; i++)
         {
             data[lastId++] = lastSector.data[i];
             lastSectorData[i] = lastSector.data[i];
@@ -212,7 +212,7 @@ public class SectorData : StreamArray
 
         if (lastSector.hash != ComputeDataHash(lastSectorData))
         {
-            Console.Error.WriteLine($"Sector {node.SectorIds[^1]} is corrupted");
+            Console.Error.WriteLine($"Sector {sectorIds[^1]} is corrupted");
             return Array.Empty<byte>();
         }
 
@@ -231,6 +231,7 @@ public class SectorData : StreamArray
     {
         _fs.Seek(_dataStart + sectorId * sizeof(bool), SeekOrigin.Begin);
         _bw.Write(true);
+        _isFreeBitmap[sectorId] = true;
 
         if (!hasDuplicate)
         {
@@ -252,24 +253,23 @@ public class SectorData : StreamArray
     }
 
 
-    public int[] AppendToFile(byte[] data, ref FileSystemNode node)
+    public int[] AppendToFile(byte[] data, ref int lastDataIndex, ref MyList<int> sectorIds)
     {
-        var lastSectorId = node.SectorIds[^1];
+        var lastSectorId = sectorIds[^1];
         var lastSector = GetSector(lastSectorId);
-        int remaining = _dataSize - node.LastDataIndex;
+        int remaining = _dataSize - lastDataIndex;
 
-        var currentData = ArrayHelper<byte>.subArray(lastSector.data, 0, node.LastDataIndex);
+        var currentData = ArrayHelper<byte>.subArray(lastSector.data, 0, lastDataIndex);
 
         var fullNewData = ArrayHelper<byte>.mergeArrays(currentData, data);
 
         var writtenBytes = Math.Min(data.Length, remaining);
-        node.LastDataIndex += writtenBytes;
+        lastDataIndex += writtenBytes;
 
         var preAppendHash = ComputeDataHash(currentData);
         if (preAppendHash != lastSector.hash)
         {
             Console.WriteLine(Messages.CorruptedSector);
-            node.IsCorrupted = true;
             return Array.Empty<int>();
         }
 
@@ -278,7 +278,7 @@ public class SectorData : StreamArray
             var repeatSector = GetSectorIdWithSameHash(afterAppendHash);
             if (repeatSector != -1)
             {
-                node.SectorIds[^1] = repeatSector;
+                sectorIds[^1] = repeatSector;
                 lastSectorId = repeatSector;
                 Free(lastSectorId, true);
             }
@@ -290,7 +290,7 @@ public class SectorData : StreamArray
                 if (sharedSector != -1)
                 {
                     var newSector = TakeNextAvalableSector();
-                    node.SectorIds[^1] = newSector;
+                    sectorIds[^1] = newSector;
 
                     _hashTable.SaveHash(afterAppendHash, newSector);
 
@@ -321,7 +321,7 @@ public class SectorData : StreamArray
         {
             //write the remaining sectors;
             var res = WriteFile(ArrayHelper<byte>.subArray(data, writtenBytes, data.Length));
-            node.LastDataIndex = res.LastDataIndex;
+            lastDataIndex = res.LastDataIndex;
             return res.Sectors;
         }
 
@@ -345,11 +345,11 @@ public class SectorData : StreamArray
         for (int i = 0; i <= _lastWrittenSector; i++)
         {
             _isFreeBitmap[i] = _br.ReadBoolean();
-        } 
+        }
         for (int i = _lastWrittenSector + 1; i <= _lastSectorId; i++)
         {
             _isFreeBitmap[i] = true;
-        } 
+        }
     }
 
     public void CreateSectorData()

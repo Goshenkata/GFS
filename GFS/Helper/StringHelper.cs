@@ -199,4 +199,9 @@ public class StringHelper
         return ext == "png" || ext == "jpg" || ext == "jpeg";
     }
 
+    public static string GetName(string path)
+    {
+        var splitPath = StringHelper.Split(path, '/');
+        return splitPath[^1];
+    }
 }

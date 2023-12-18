@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GFS
+﻿namespace GFS
 {
     public class FileHashTable : StreamArray
     {
@@ -22,7 +15,7 @@ namespace GFS
             }
         }
 
-        public static  long OFFSET = sizeof(long);
+        public static long OFFSET = sizeof(long);
         public static long ELEMENT_SIZE = sizeof(long) + sizeof(int);
 
         public struct HashSectorIndxPair
@@ -30,11 +23,11 @@ namespace GFS
             public long Hash;
             public int Index;
         }
-        public FileHashTable(long totalNumberOfSectors,long dataStart, long dataEnd, FileStream fs, BinaryWriter bw, BinaryReader br) : base(dataStart, dataEnd, fs, bw, br)
+        public FileHashTable(long totalNumberOfSectors, long dataStart, long dataEnd, FileStream fs, BinaryWriter bw, BinaryReader br) : base(dataStart, dataEnd, fs, bw, br)
         {
             _fs.Seek(dataStart, SeekOrigin.Begin);
             _lastHashIndex = _br.ReadInt32();
-            _totalNumberOfSectors = totalNumberOfSectors; 
+            _totalNumberOfSectors = totalNumberOfSectors;
         }
         public int getIdWithSameHash(long hash)
         {
@@ -48,7 +41,8 @@ namespace GFS
         public void RemoveHash(long hash)
         {
             int removePosition = FindInsertPosition(hash);
-            if (removePosition == -1) {
+            if (removePosition == -1)
+            {
                 return;
             }
 
@@ -58,7 +52,7 @@ namespace GFS
                 _fs.Seek(_dataStart + OFFSET + i * ELEMENT_SIZE, SeekOrigin.Begin);
                 long currentHash = _br.ReadInt64();
                 int currentIndx = _br.ReadInt32();
-                _fs.Seek( -2 * ELEMENT_SIZE, SeekOrigin.Current);
+                _fs.Seek(-2 * ELEMENT_SIZE, SeekOrigin.Current);
                 _bw.Write(currentHash);
                 _bw.Write(currentIndx);
             }
@@ -79,14 +73,14 @@ namespace GFS
 
             if (elementsToShift > 0)
             {
-            // Read the data to be shifted
-            _fs.Seek(_dataStart + OFFSET + insertPosition * ELEMENT_SIZE, SeekOrigin.Begin);
-            byte[] dataToShift = new byte[elementsToShift * ELEMENT_SIZE];
-            _fs.Read(dataToShift, 0, dataToShift.Length);
+                // Read the data to be shifted
+                _fs.Seek(_dataStart + OFFSET + insertPosition * ELEMENT_SIZE, SeekOrigin.Begin);
+                byte[] dataToShift = new byte[elementsToShift * ELEMENT_SIZE];
+                _fs.Read(dataToShift, 0, dataToShift.Length);
 
-            // Write the shifted data
-            _fs.Seek(_dataStart + OFFSET + (insertPosition + 1) * ELEMENT_SIZE, SeekOrigin.Begin);
-            _fs.Write(dataToShift, 0, dataToShift.Length);
+                // Write the shifted data
+                _fs.Seek(_dataStart + OFFSET + (insertPosition + 1) * ELEMENT_SIZE, SeekOrigin.Begin);
+                _fs.Write(dataToShift, 0, dataToShift.Length);
             }
 
             // Write the new hash at the correct position
@@ -102,7 +96,7 @@ namespace GFS
             while (start <= end)
             {
                 int mid = (start + end) / 2;
-                _fs.Seek(_dataStart + OFFSET + mid * ELEMENT_SIZE,  SeekOrigin.Begin);
+                _fs.Seek(_dataStart + OFFSET + mid * ELEMENT_SIZE, SeekOrigin.Begin);
                 long valAtMid = _br.ReadInt64();
 
                 if (valAtMid == hash)
@@ -128,15 +122,17 @@ namespace GFS
                 return -1;
             }
             int mid = (start + end) / 2;
-            _fs.Seek(_dataStart + OFFSET + mid * ELEMENT_SIZE,  SeekOrigin.Begin);
+            _fs.Seek(_dataStart + OFFSET + mid * ELEMENT_SIZE, SeekOrigin.Begin);
             long value = _br.ReadInt64();
             if (value == hash)
             {
                 return mid;
-            } else if (value.CompareTo(hash) > 0)
+            }
+            else if (value.CompareTo(hash) > 0)
             {
                 return BinarySearch(hash, start, mid - 1); ;
-            } else
+            }
+            else
             {
                 return BinarySearch(hash, mid + 1, end);
             }
@@ -170,7 +166,8 @@ namespace GFS
         public void PrintAll()
         {
             _fs.Seek(_dataStart + OFFSET, SeekOrigin.Begin);
-            for (int i =0; i<= LastHashIndex; i++) {
+            for (int i = 0; i <= LastHashIndex; i++)
+            {
                 var hash = _br.ReadInt64();
                 var indx = _br.ReadInt32();
                 Console.WriteLine($"{i}: {hash} {indx}");

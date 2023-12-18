@@ -1,109 +1,112 @@
-using GFS.Structures;
-using System.Collections;
+﻿using GFS.Structures;
 
-namespace GFS;
-
-public class FileSystemNode : IEnumerable<FileSystemNode>
+namespace GFS
 {
-    public string Name { get; set; }
-    public bool IsDirectory { get; }
-    public string Path { get; }
-    public bool IsCorrupted { get; set; }
-    public MyList<FileSystemNode> Children { get; set; } = new();
-    public MyList<int> SectorIds { get; set; } = new();
-    public int LastDataIndex { get; set; } = 0;
-
-    public FileSystemNode(string path, string name, bool isDirectory, int lastDataIndex = 0, bool isCorrupted = false)
+    public class FileSystemNode
     {
-        Name = name;
-        Path = path;
-        IsDirectory = isDirectory;
-        LastDataIndex = lastDataIndex;
-        IsCorrupted = isCorrupted;
-    }
 
-    public string Serialize()
-    {
-        var output = new MyStringBuilder();
-        output.Append(Path + " ");
-        output.Append(Name + " ");
-        output.Append(IsDirectory + " ");
-        output.Append(IsCorrupted + " ");
-        output.Append(LastDataIndex + " ");
-        if (!IsDirectory)
+        public static int ELEMENT_SIZE = sizeof(bool) * 2 + sizeof(char) * 50 + sizeof(int) * (CHILDREN_DATA_SECTORS_LENGTH + 4);
+        public const int NAME_LENGTH = 50;
+        public const int CHILDREN_DATA_SECTORS_LENGTH = 100;
+
+        //saved
+        public bool IsDirectory { get; }
+        public bool IsCorrupted { get; set; }
+        public int ParentID { get; set; }
+        public int Indx { get; set; }
+        public int LastDataIndexOfChildrenSector { get; set; }
+        public int LastDataIndexOfFile { get; set; }
+
+        public char[] _nameArr;
+        private int[] _childrenSectorIds;
+
+
+
+        public string Name
         {
-            foreach (var sectorId in SectorIds)
+            get
             {
-                output.Append(sectorId + " ");
+                return new string(_nameArr);
+            }
+            set
+            {
+                if (value.Length < NAME_LENGTH)
+                {
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        _nameArr[i] = value[i];
+                    }
+                    for (int i = value.Length; i < NAME_LENGTH; i++)
+                    {
+                        _nameArr[i] = '\0';
+                    }
+                }
             }
         }
 
-        output.Append("\n");
-        foreach (var child in Children)
+        public MyList<int> ChildrenSectorIds
         {
-            output.Append(child.Serialize());
-        }
-
-        return output.ToString();
-    }
-
-
-    public FileSystemNode? getChildByName(string name)
-    {
-        foreach (var fileSystemNode in Children)
-        {
-            if (fileSystemNode.Name == name)
+            get
             {
-                return fileSystemNode;
+                MyList<int> output = new MyList<int>();
+                foreach (int el in _childrenSectorIds)
+                {
+                    if (el == -1)
+                        return output;
+                    output.AddLast(el);
+                }
+                return output;
+            }
+            set
+            {
+                if (value.Count < CHILDREN_DATA_SECTORS_LENGTH)
+                {
+                    for (int i = 0; i < value.Count; i++)
+                    {
+                        _childrenSectorIds[i] = value[i];
+                    }
+                    for (int i = value.Count; i < CHILDREN_DATA_SECTORS_LENGTH; i++)
+                    {
+                        _childrenSectorIds[i] = -1;
+                    }
+                }
             }
         }
 
-        return null;
-    }
-
-    public IEnumerator<FileSystemNode> GetEnumerator()
-    {
-        MyQueue<FileSystemNode> queue = new MyQueue<FileSystemNode>();
-        queue.Enqueue(this);
-        while (!queue.IsEmpty())
+        public FileSystemNode(bool isDirectory, bool isCorrupted, int parentId, int indx, int lastDataOfChildrenSector, int lastDataIndexOfFile, string name)
         {
-            var current = queue.Dequeue();
-            yield return current;
-            foreach (var child in current.Children)
-            {
-                queue.Enqueue(child);
-            }
+            _nameArr = new char[NAME_LENGTH];
+            Array.Fill(_nameArr, '\0');
+
+            _childrenSectorIds = new int[100];
+            Array.Fill(_childrenSectorIds, -1);
+
+            IsDirectory = isDirectory;
+            IsCorrupted = isCorrupted;
+            ParentID = parentId;
+            Indx = indx;
+            LastDataIndexOfChildrenSector = lastDataOfChildrenSector;
+            LastDataIndexOfFile = lastDataIndexOfFile;
+            Name = name;
+            ChildrenSectorIds = new MyList<int>();
         }
-    }
 
-    public override string ToString()
-    {
-        return $"{Path} {Name} {IsDirectory} {IsCorrupted}";
-    }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
 
-    public void PrintTree(int level = 0)
-    {
-        string indentation = new string('-', level * 2);
 
-        var sectors = IsDirectory ? "" : SectorIds.ToString();
-        Console.WriteLine(indentation + Name + " " + IsDirectory + " " + LastDataIndex + " " + IsCorrupted + sectors);
-
-        foreach (var child in Children)
+        public override string ToString()
         {
-            child.PrintTree(level + 1);
+            return $"{Name} {IsDirectory} {IsCorrupted}";
         }
-    }
 
-    public bool Equals(FileSystemNode node)
-    {
-        if (node == null)
-            return false;
 
-        return Name == node.Name && IsDirectory == node.IsDirectory && Path == node.Path;
+
+        public bool Equals(FileSystemNode node)
+        {
+            if (node == null)
+                return false;
+
+            return Name == node.Name && Indx == node.Indx;
+        }
     }
 }

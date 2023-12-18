@@ -8,18 +8,21 @@ namespace GFSGUI
     {
         private FileSystemManager _fileSystemManager;
         private InputFormOperationEnum _operation;
-        private FileSystemNode? _fileSystemNode;
-        public InputForm(string formText, FileSystemManager fsManager, InputFormOperationEnum op, FileSystemNode node = null)
+        private string? _fullPath = null;
+        public InputForm(string formText, FileSystemManager fsManager, InputFormOperationEnum op, string nodePath = null)
         {
             InitializeComponent();
             _fileSystemManager = fsManager;
             _operation = op;
-            _fileSystemNode = node;
+            if (nodePath != null)
+            {
+                _fullPath = nodePath;
+            }
             label1.Text = formText;
             this.Text = formText;
             if (_operation == InputFormOperationEnum.Rename)
             {
-                textBox1.Text = node.Name;
+                textBox1.Text = StringHelper.GetName(nodePath);
                 writeBtn.Text = "Rename";
             }
             else
@@ -37,16 +40,16 @@ namespace GFSGUI
             {
                 case InputFormOperationEnum.Mkdir:
                     string pat = "/";
-                    if (_fileSystemNode != _fileSystemManager.GetNode("/"))
+                    if (_fullPath != "/")
                     {
-                        pat = StringHelper.ConcatPath(_fileSystemNode.Path, _fileSystemNode.Name);
+                        pat = _fullPath;
                     }
                     operationResult = _fileSystemManager.Mkdir(pat, text);
                     break;
                 case InputFormOperationEnum.Rename:
-                    if (_fileSystemNode != null)
+                    if (_fullPath != null)
                     {
-                        operationResult = _fileSystemManager.RenameNode(ref _fileSystemNode, text);
+                        operationResult = _fileSystemManager.RenameNode(_fullPath, text);
                     }
                     break;
             }

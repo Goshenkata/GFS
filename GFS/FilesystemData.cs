@@ -1,105 +1,153 @@
-using GFS.DTO;
 using GFS.helper;
 using GFS.Structures;
+using System.Collections;
 
 namespace GFS;
 
-public class FilesystemData : StreamArray
+public class FilesystemData : StreamArray, IEnumerable<FileSystemNode>
 {
-    public FileSystemNode _root;
+    public FileSystemNode Root;
+    private bool[] _bitmap;
+    private long _maxNumOfNodes;
+    private long _nodesStart;
+    private SectorData _sectorData;
 
-    public void InitTestData()
+    public FilesystemData(long dataStart, long dataEnd, FileStream fs, BinaryWriter bw, BinaryReader br, ref SectorData sectorData) : base(dataStart,
+        dataEnd, fs, bw, br)
     {
-        var sub1 = new FileSystemNode("/", "sub1", true);
-        var file1 = new FileSystemNode("/sub1/", "file1", false);
-        sub1.Children.AddLast(file1);
-        sub1.Children.AddLast(new FileSystemNode("/sub1/", "file2", false));
-        _root.Children.AddLast(sub1);
-        _root.Children.AddLast(new FileSystemNode("/", "file3", false));
-        var sub2 = new FileSystemNode("/", "sub2", true);
-        sub2.Children.AddLast(new FileSystemNode("/sub2/", "file4", false));
-        var sub3 = new FileSystemNode("/sub2/", "sub3", true);
-        sub3.Children.AddLast(new FileSystemNode("/sub2/sub3/", "file5", false));
-        sub2.Children.AddLast(sub3);
-        _root.Children.AddLast(sub2);
+        long availableBytes = dataEnd - dataStart - 8;
+        _maxNumOfNodes = availableBytes / FileSystemNode.ELEMENT_SIZE;
+        _bitmap = new bool[_maxNumOfNodes];
+        int bitmapSize = sizeof(bool) * _bitmap.Length;
+        _maxNumOfNodes = (availableBytes - bitmapSize) / FileSystemNode.ELEMENT_SIZE - 1;
+        LoadBitmap();
+        _nodesStart = dataStart + bitmapSize + 8;
+
+        _sectorData = sectorData;
+        Root = LoadById(0);
     }
 
-    public void WriteMetadata()
+    private void LoadBitmap()
     {
-        var data = SerializeFs();
         _fs.Seek(_dataStart, SeekOrigin.Begin);
-        _bw.Write(data);
-        _bw.Flush();
-    }
-
-    private string SerializeFs()
-    {
-        var output = new MyStringBuilder();
-        foreach (var fileSystemNode in _root.Children)
+        for (int i = 0; i <= _maxNumOfNodes; i++)
         {
-            output.Append(fileSystemNode.Serialize());
+            _bitmap[i] = _br.ReadBoolean();
         }
-
-        return output.ToString();
     }
-
-
-    private void DeserializeFs(string serializedFs)
+    public void InitFs()
     {
-        _root = new FileSystemNode("/", "root", true);
-        var lines = StringHelper.Split(serializedFs, '\n');
-        for (var index = 0; index < lines.Length; index++)
+        _fs.Seek(_dataStart, SeekOrigin.Begin);
+        for (int i = 0; i <= _maxNumOfNodes; i++)
         {
-            var line = lines[index];
-            var split = StringHelper.Split(line, ' ');
-            int[] sectors = new int[split.Length - 5];
-            for (int i = 5; i < split.Length; i++)
-            {
-                sectors[i - 5] = int.Parse(split[i]);
-            }
-
-            CreateNode(split[0], split[1], bool.Parse(split[2]), sectors, int.Parse(split[4]), bool.Parse(split[3]));
+            _bw.Write(true);
+            _bitmap[i] = true;
         }
+        CreateNode("root", true, -1);
+        Root = LoadById(0);
     }
 
     public FileSystemNode? GetNodeByPath(string name)
     {
         if (name == "/")
         {
-            return _root;
+            return Root;
         }
         string[] path = StringHelper.Split(name, '/');
-        var current = _root;
+        var current = Root;
         foreach (var s in path)
         {
-            current = current.getChildByName(s);
+            var childIds = GetChildren(current);
+            foreach (var childId in childIds)
+            {
+                var node = LoadById(childId);
+                if (node.Name == s)
+                {
+                    current = node;
+                }
+            }
             if (current == null) return null;
         }
 
         return current;
     }
 
-    public void CreateNode(string filePath, string name, bool isDirectory, int[] sectors, int lastDataIndex = 0, bool isCorrupted = false)
+    private int GetFreeIndx()
     {
-        var dir = GetNodeByPath(filePath);
-        if (dir == null || !dir.IsDirectory)
+        for (int i = 0; i <= _maxNumOfNodes; i++)
         {
-            return;
+            if (_bitmap[i]) return i;
         }
-
-        var node = new FileSystemNode(filePath, name, isDirectory, lastDataIndex, isCorrupted);
-        node.SectorIds.AddLast(sectors);
-        dir.Children.AddLast(node);
+        return -1;
     }
 
-    public bool Mkdir(string path, string name)
+    public void CreateNode(string name, bool isDirectory, int parentId, int lastDataIndex = 0, bool isCorrupted = false)
     {
-        var node = GetNodeByPath(path);
-        if (node == null)
-            return false;
-        node.Children.AddLast(new FileSystemNode(path, name, true));
-        WriteMetadata();
-        return true;
+        int i = GetFreeIndx();
+        FileSystemNode node = new FileSystemNode(isDirectory, isCorrupted, parentId, i, 0, lastDataIndex, name);
+        Save(node);
+    }
+
+
+    public FileSystemNode LoadById(int id)
+    {
+        _fs.Seek(_nodesStart + id * FileSystemNode.ELEMENT_SIZE, SeekOrigin.Begin);
+        bool isDir = _br.ReadBoolean();
+        bool isCorrupt = _br.ReadBoolean();
+
+        int parentId = _br.ReadInt32();
+        int index = _br.ReadInt32();
+        int lastDataIndexOfChildrenSector = _br.ReadInt32();
+        int lastDataIndexOfFile = _br.ReadInt32();
+
+        string name = new string(_br.ReadChars(FileSystemNode.NAME_LENGTH));
+        MyList<int> sectors = new MyList<int>();
+        for (int i = 0; i < FileSystemNode.CHILDREN_DATA_SECTORS_LENGTH; i++)
+        {
+            var el = _br.ReadInt32();
+            if (el == -1)
+                break;
+            sectors.AddLast(el);
+        }
+
+        FileSystemNode fileSystemNode = new FileSystemNode(isDir, isCorrupt, parentId, index, lastDataIndexOfChildrenSector, lastDataIndexOfFile, name);
+        fileSystemNode.ChildrenSectorIds.AddLast(sectors.GetArray());
+        return fileSystemNode;
+    }
+
+    public MyList<int> GetChildren(FileSystemNode node)
+    {
+        byte[] data = _sectorData.ReadFile(node.ChildrenSectorIds, node.LastDataIndexOfChildrenSector);
+        int[] intArray = new int[data.Length / 4];
+
+        for (int i = 0; i < intArray.Length; i++)
+        {
+            intArray[i] = BitConverter.ToInt32(data, i * 4);
+        }
+        var list = new MyList<int>();
+        list.AddLast(intArray);
+        return list;
+    }
+    public void Save(FileSystemNode node)
+    {
+        _fs.Seek(_nodesStart + FileSystemNode.ELEMENT_SIZE * node.Indx, SeekOrigin.Begin);
+
+        //bools
+        _bw.Write(node.IsDirectory);
+        _bw.Write(node.IsCorrupted);
+
+        //ints
+        _bw.Write(node.ParentID);
+        _bw.Write(node.Indx);
+        _bw.Write(node.LastDataIndexOfChildrenSector);
+        _bw.Write(node.LastDataIndexOfFile);
+
+        //arrs
+        _bw.Write(node._nameArr);
+        foreach (var sectorId in node.ChildrenSectorIds)
+        {
+            _bw.Write(sectorId);
+        }
     }
 
     public bool DirExists(string path)
@@ -108,58 +156,77 @@ public class FilesystemData : StreamArray
         return node != null && node.IsDirectory;
     }
 
+    public void SetChildren(FileSystemNode node, MyList<int> children)
+    {
+        _sectorData.Free(node.ChildrenSectorIds.GetArray());
+
+        var intArr = children.GetArray();
+        byte[] byteArray = new byte[intArr.Length * sizeof(int)];
+        Buffer.BlockCopy(intArr, 0, byteArray, 0, byteArray.Length);
+
+        //write the children inside other sectors
+        var output = _sectorData.WriteFile(byteArray);
+
+        node.LastDataIndexOfChildrenSector = output.LastDataIndex;
+        foreach (var sector in output.Sectors)
+        {
+            node.ChildrenSectorIds.AddLast(sector);
+        }
+        Save(node);
+    }
+    public void RemoveChild(FileSystemNode parent, FileSystemNode child)
+    {
+        var parentChildren = GetChildren(parent);
+        for (int i = 0; i < parentChildren.Count; i++)
+        {
+            if (parentChildren[i] == child.Indx)
+            {
+                parentChildren.RemoveAt(i);
+                RemoveNode(child);
+            }
+        }
+        SetChildren(parent, parentChildren);
+
+    }
     public bool sectorHasDuplicates(int sectorId, FileSystemNode toSkip)
     {
-        foreach (var node in _root)
+        foreach (var node in this)
         {
             if (node.IsDirectory) continue;
             if (node.Equals(toSkip)) continue;
-            if (node.SectorIds.Contains(sectorId))
+            var sectorIds = GetChildren(node);
+            if (sectorIds.Contains(sectorId))
                 return true;
         }
         return false;
     }
 
-    public void LoadFs()
+    public IEnumerator<FileSystemNode> GetEnumerator()
     {
-        _fs.Seek(_dataStart, SeekOrigin.Begin);
-        var deserialized = _br.ReadString();
-        DeserializeFs(deserialized);
-    }
-
-    public void PrintTree()
-    {
-        _root.PrintTree();
-    }
-
-    public OperationResult Rmdir(string parentPath, string dirName)
-    {
-        var parent = GetNodeByPath(parentPath);
-        if (parent == null)
-            return new OperationResult() { Success = false, Message = "parent path is null" };
-        for (var i = 0; i < parent.Children.Count; i++)
+        MyQueue<FileSystemNode> queue = new MyQueue<FileSystemNode>();
+        queue.Enqueue(Root);
+        while (!queue.IsEmpty())
         {
-            var current = parent.Children[i];
-            if (current.Name == dirName)
+            var current = queue.Dequeue();
+            yield return current;
+            foreach (var child in GetChildren(current))
             {
-                if (!current.Children.isEmpty())
-                {
-                    return new OperationResult() { Success = false, Message = Messages.DirectoryIsNotEmpty };
-                }
-
-                parent.Children.RemoveAt(i);
+                queue.Enqueue(LoadById(child));
             }
         }
-
-        WriteMetadata();
-        return new OperationResult() { Success = true, Message = "" };
     }
 
-    public FilesystemData(long dataStart, long dataEnd, FileStream fs, BinaryWriter bw, BinaryReader br) : base(dataStart,
-        dataEnd, fs, bw, br)
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        _root = new FileSystemNode("/", "root", true);
+        return GetEnumerator();
     }
+
+    private void RemoveNode(FileSystemNode node)
+    {
+        _sectorData.Free(node.ChildrenSectorIds.GetArray());
+        _bitmap[node.Indx] = true;
+    }
+
 
     public bool FileExists(string path)
     {
@@ -170,5 +237,18 @@ public class FilesystemData : StreamArray
     public bool Exists(string path)
     {
         return GetNodeByPath(path) != null;
+    }
+
+    public void PrintTree(int level, FileSystemNode current)
+    {
+        string indentation = new string('-', level * 2);
+
+        var sectors = current.IsDirectory ? "" : current.ChildrenSectorIds.ToString();
+        Console.WriteLine(indentation + current.Name + " " + current.IsDirectory + " " + current.LastDataIndexOfFile + " " + " " + current.IsCorrupted + sectors);
+        var kids = GetChildren(current);
+        foreach (var child in kids)
+        {
+            PrintTree(level + 1, LoadById(child));
+        }
     }
 }

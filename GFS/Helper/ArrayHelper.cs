@@ -30,4 +30,9 @@ public class ArrayHelper<T>
             result[lastIndx++] = b[i];
         return result;
     }
+
+    internal T1[] FilledArray<T1>(T1 v)
+    {
+        throw new NotImplementedException();
+    }
 }
