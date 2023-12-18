@@ -9,26 +9,26 @@ public class Program
     public static void Main(string[] args)
     {
         /*
-        FileStream fs = new FileStream("hashTable", FileMode.Create,FileAccess.ReadWrite);
-        BinaryReader br = new BinaryReader(fs);
+        FileStream fs = new FileStream("test.txt", FileMode.Create,FileAccess.ReadWrite);
+        fs.SetLength(100000L);
         BinaryWriter bw = new BinaryWriter(fs);
-        fs.SetLength(1000000);
-        FileHashTable hashTable = new FileHashTable(100, 0, 1000000, fs, bw, br);
-        hashTable.InitData();
-        hashTable.SaveHash(5L, 1);
-        hashTable.SaveHash(2L, 2);
-        hashTable.SaveHash(10L, 3);
-        hashTable.SaveHash(-29L, 4);
-        hashTable.SaveHash(-12L, 5);
-        
-        hashTable.PrintAll();
+        BinaryReader br = new BinaryReader(fs);
 
-        hashTable.RemoveHash(-12L);
-        var id = hashTable.getIdWithSameHash(2L);
-        Console.WriteLine($"the id with hash 2L is {id}");
-        var d= hashTable.GetBySectorId(3);
-        Console.WriteLine($"getBySectorId({d.Index}) has hash {d.Hash}");
-        hashTable.PrintAll();
+        SectorData sectorData = new SectorData(20008L, 100000L - 8L, fs, bw, br, 100);
+        sectorData.CreateSectorData();
+
+        FilesystemData fsData = new FilesystemData(0L, 20000L, fs, bw, br, ref sectorData);
+        fsData.InitFs();
+        Console.WriteLine(fsData.LoadById(0));
+        fsData.CreateNode("dir1", true, 0);
+        fsData.CreateNode("dir2", true, 0);
+        fsData.PrintTree(0, fsData.LoadById(0));
+        var dir1 = fsData.GetNodeByPath("/dir1");
+        var dir2 = fsData.GetNodeByPath("/dir2");
+        fsData.RemoveChild(fsData.LoadById(0), dir1);
+        Console.WriteLine("After remove===");
+        fsData.PrintTree(0, fsData.LoadById(0));
+        return;
         */
 
         FileSystemManager fileSystemManager = new FileSystemManager();

@@ -18,7 +18,7 @@ namespace GFS
         public int LastDataIndexOfFile { get; set; }
 
         public char[] _nameArr;
-        private int[] _childrenSectorIds;
+        public int[] _childrenSectorIds;
 
 
 
@@ -26,11 +26,18 @@ namespace GFS
         {
             get
             {
-                return new string(_nameArr);
+                var output = new MyStringBuilder();
+                foreach (var c in _nameArr)
+                {
+                    if (c == '\0')
+                        break;
+                    output.Append(c);
+                }
+                return output.ToString();
             }
             set
             {
-                if (value.Length < NAME_LENGTH)
+                if (value.Length <= NAME_LENGTH)
                 {
                     for (int i = 0; i < value.Length; i++)
                     {
@@ -59,7 +66,7 @@ namespace GFS
             }
             set
             {
-                if (value.Count < CHILDREN_DATA_SECTORS_LENGTH)
+                if (value.Count <= CHILDREN_DATA_SECTORS_LENGTH)
                 {
                     for (int i = 0; i < value.Count; i++)
                     {
@@ -78,7 +85,7 @@ namespace GFS
             _nameArr = new char[NAME_LENGTH];
             Array.Fill(_nameArr, '\0');
 
-            _childrenSectorIds = new int[100];
+            _childrenSectorIds = new int[CHILDREN_DATA_SECTORS_LENGTH];
             Array.Fill(_childrenSectorIds, -1);
 
             IsDirectory = isDirectory;

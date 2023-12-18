@@ -117,7 +117,7 @@ public class FileSystemManager
 
     public void PrintTree()
     {
-        _fsData.PrintTree(0, _fsData.Root);
+        _fsData.PrintTree(0, _fsData.LoadById(0));
     }
 
     public bool DirExists(string dirName)
@@ -196,13 +196,19 @@ public class FileSystemManager
         }
 
         if (writeFileDto.IsCorrupted)
+        {
+            Console.WriteLine("File corrupted");
             return false;
+        }
         if (node == null)
         {
             string fileName;
             string parentPath = StringHelper.GetParentPath(filePath, out fileName);
             var parentNode = _fsData.GetNodeByPath(parentPath);
-            _fsData.CreateNode(fileName, false, parentNode.ParentID, writeFileDto.LastDataIndex);
+            var newNode = _fsData.CreateNode(fileName, false, parentNode.Indx, writeFileDto.LastDataIndex);
+            var list = new MyList<int>();
+            list.AddLast(writeFileDto.Sectors);
+            _fsData.SetChildren(newNode, list);
         }
         else
         {
