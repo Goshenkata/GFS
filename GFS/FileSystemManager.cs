@@ -13,6 +13,7 @@ public class FileSystemManager
     public string CurrentPath { get; set; } = "/";
 
     public FilesystemData _fsData;
+    public FilesystemData _fsDataReserve;
     public SectorData _sectorData;
 
     private FileStream _fs;
@@ -21,7 +22,8 @@ public class FileSystemManager
 
     private int _sectorSizeInBytes;
     private long _maxFsSizeInBytes;
-    private const long FsDataOffset = sizeof(long) + sizeof(int) + sizeof(int);
+    //0 normal 1 active 2 reserve
+    private const long FsDataOffset = sizeof(long) + sizeof(int) + sizeof(int) + sizeof(int);
 
 
     public bool IsInit()
@@ -56,11 +58,16 @@ public class FileSystemManager
         _bw.Write(0);
 
 
-        _sectorData = new SectorData(sectorOffset + 1, maxSize, _fs, _bw, _br, sectorSize);
+        _sectorData = new SectorData(sectorOffset*2+ FsDataOffset + 16, maxSize, _fs, _bw, _br, sectorSize);
         _sectorData.CreateSectorData();
 
-        _fsData = new FilesystemData(FsDataOffset, sectorOffset, _fs, _bw, _br, ref _sectorData);
+
+        _fsData = new FilesystemData(FsDataOffset, FsDataOffset + sectorOffset, _fs, _bw, _br, ref _sectorData);
         _fsData.InitFs();
+
+        _fsDataReserve = new FilesystemData(FsDataOffset + sectorOffset + 1, FsDataOffset +  sectorOffset * 2 + 1, _fs, _bw, _br, ref _sectorData);
+        _fsDataReserve.InitFs();
+
 
         return new OperationResult() { Success = true, Message = "" };
     }
@@ -77,10 +84,30 @@ public class FileSystemManager
         _sectorSizeInBytes = _br.ReadInt32();
         long sectorOffset = _maxFsSizeInBytes / 10;
 
-        _sectorData = new SectorData(sectorOffset + 1, _maxFsSizeInBytes, _fs, _bw, _br, _sectorSizeInBytes);
+        _sectorData = new SectorData( FsDataOffset + sectorOffset * 2 + 16, _maxFsSizeInBytes, _fs, _bw, _br, _sectorSizeInBytes);
         _sectorData.LoadSectorData();
 
-        _fsData = new FilesystemData(FsDataOffset, sectorOffset, _fs, _bw, _br,ref _sectorData);
+        switch(GetLastOperatingBlock())
+        {
+            case LastOperatingBlock.FSDATA:
+                Console.WriteLine("Restoring Filesystem...");
+                _fs.Seek(FsDataOffset + sectorOffset + 1, SeekOrigin.Begin);
+                var data = _br.ReadBytes((int)(sectorOffset));
+                _fs.Seek(FsDataOffset, SeekOrigin.Begin);
+                _bw.Write(data);
+                break;
+            case LastOperatingBlock.RESERVEFSDATA:
+                _fs.Seek(FsDataOffset, SeekOrigin.Begin);
+                var data2 = _br.ReadBytes((int)(sectorOffset));
+                _fs.Seek(FsDataOffset + sectorOffset + 1, SeekOrigin.Begin);
+                _bw.Write(data2);
+                break;
+        }
+        _fsData = new FilesystemData(FsDataOffset, FsDataOffset + sectorOffset, _fs, _bw, _br, ref _sectorData);
+
+        _fsDataReserve = new FilesystemData(sectorOffset + 1 + FsDataOffset, sectorOffset * 2 + 1 + FsDataOffset, _fs, _bw, _br, ref _sectorData);
+
+        SetLastOperatingBlock(LastOperatingBlock.SECTOR);
     }
 
     public OperationResult RenameNode(string fullPath, string newName)
@@ -96,7 +123,14 @@ public class FileSystemManager
         }
         var node = _fsData.GetNodeByPath(fullPath);
         node.Name = newName;
+
+
+        SetLastOperatingBlock(LastOperatingBlock.FSDATA);
         _fsData.Save(node);
+        SetLastOperatingBlock(LastOperatingBlock.RESERVEFSDATA);
+        _fsDataReserve.Save(node);
+        SetLastOperatingBlock(LastOperatingBlock.SECTOR);
+
         return new OperationResult() { Success = true, Message = "" };
     }
     public OperationResult Mkdir(string parentPath, string dirName)
@@ -113,7 +147,16 @@ public class FileSystemManager
         }
 
         var parent = _fsData.GetNodeByPath(parentPath);
-        _fsData.CreateNode(dirName, true, parent.Indx);
+
+
+        SetLastOperatingBlock(LastOperatingBlock.FSDATA);
+        var node = _fsData.CreateNode(dirName, true, parent.Indx);
+        SetLastOperatingBlock(LastOperatingBlock.RESERVEFSDATA);
+        _fsDataReserve.Save(_fsData.LoadById(node.ParentID));
+        _fsDataReserve.Save(node);
+        SetLastOperatingBlock(LastOperatingBlock.SECTOR);
+
+
         return new OperationResult() { Success = true, Message = "" };
     }
 
@@ -142,7 +185,13 @@ public class FileSystemManager
             return new OperationResult() { Success = false, Message = Messages.DirectoryIsNotEmpty };
         }
         var parent = _fsData.GetNodeByPath(parentPath);
+
+        SetLastOperatingBlock(LastOperatingBlock.FSDATA);
         _fsData.RemoveChild(parent, nodeToRemove);
+        SetLastOperatingBlock(LastOperatingBlock.RESERVEFSDATA);
+        _fsDataReserve.RemoveChild(parent, nodeToRemove);
+        SetLastOperatingBlock(LastOperatingBlock.SECTOR);
+
         return new OperationResult() { Success = false, Message = "" };
     }
 
@@ -174,13 +223,18 @@ public class FileSystemManager
         int lastDataindex = node.LastDataIndexOfFile;
         int[] newSectors = _sectorData.AppendToFile(data, ref lastDataindex, ref children);
         node.LastDataIndexOfFile = lastDataindex;
+
+        SetLastOperatingBlock(LastOperatingBlock.FSDATA);
         _fsData.SetChildren(node, children);
         _fsData.Save(node);
+        SetLastOperatingBlock(LastOperatingBlock.RESERVEFSDATA);
+        _fsDataReserve.Save(node);
+        SetLastOperatingBlock(LastOperatingBlock.SECTOR);
 
         if (newSectors.Length > 0)
         {
             children.AddLast(newSectors);
-            _fsData.SetChildren(node ,children);
+            _fsData.SetChildren(node, children);
         }
         return true;
     }
@@ -211,10 +265,19 @@ public class FileSystemManager
         string fileName;
         string parentPath = StringHelper.GetParentPath(filePath, out fileName);
         var parentNode = _fsData.GetNodeByPath(parentPath);
+
+        SetLastOperatingBlock(LastOperatingBlock.FSDATA);
         var newNode = _fsData.CreateNode(fileName, false, parentNode.Indx, writeFileDto.LastDataIndex);
         var list = new MyList<int>();
         list.AddLast(writeFileDto.Sectors);
         _fsData.SetChildren(newNode, list);
+
+        //Environment.Exit(0);
+
+
+        SetLastOperatingBlock(LastOperatingBlock.RESERVEFSDATA);
+        _fsDataReserve.Save(newNode);
+        SetLastOperatingBlock(LastOperatingBlock.SECTOR);
 
         return true;
     }
@@ -277,7 +340,11 @@ public class FileSystemManager
             }
         }
 
+        SetLastOperatingBlock(LastOperatingBlock.FSDATA);
         _fsData.RemoveChild(parent, file);
+        SetLastOperatingBlock(LastOperatingBlock.RESERVEFSDATA);
+        _fsDataReserve.Save(parent);
+        SetLastOperatingBlock(LastOperatingBlock.SECTOR);
     }
 
     public void PrintSectorInfo(int sector)
@@ -307,9 +374,51 @@ public class FileSystemManager
             node = _fsData.LoadById(node.ParentID);
         }
         output = "/" + output;
-        return output;  
+        return output;
 
     }
+    private LastOperatingBlock GetLastOperatingBlock()
+    {
+        _fs.Seek(sizeof(long) + sizeof(int) + sizeof(int), SeekOrigin.Begin);
+        var val = _br.ReadInt32();
+        switch (val) {
+            case 0:
+                return LastOperatingBlock.SECTOR;
+            case 1:
+                return LastOperatingBlock.FSDATA;
+            case 2:
+                return LastOperatingBlock.RESERVEFSDATA;
 
+        }
+        return LastOperatingBlock.SECTOR;
+    }
+    private void SetLastOperatingBlock(LastOperatingBlock lastOperatingBlock)
+    {
+        /* 
+         Console.WriteLine("FSDATA");
+        _fsData.Print();
+        Console.WriteLine("FSDATARESERVE");
+        _fsDataReserve.Print();
+        */
 
+        _fs.Seek(sizeof(long) + sizeof(int) + sizeof(int), SeekOrigin.Begin);
+        switch (lastOperatingBlock)
+        {
+            case LastOperatingBlock.SECTOR:
+                _bw.Write(0);
+                break;
+            case LastOperatingBlock.FSDATA:
+                _bw.Write(1);
+                break;
+            case LastOperatingBlock.RESERVEFSDATA:
+                _bw.Write(2);
+                break;
+        }
+    }
+    enum LastOperatingBlock
+    {
+        SECTOR,
+        FSDATA,
+        RESERVEFSDATA
+    }
 }

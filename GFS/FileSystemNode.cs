@@ -105,6 +105,10 @@ namespace GFS
         {
             return $"{Name} {IsDirectory} {IsCorrupted}";
         }
+        public string ToStringAll()
+        {
+            return $"Node {Indx}, Name: {Name}, IsDir: {IsDirectory}, IsCorruopter: {IsCorrupted}, children {ChildrenSectorIds}]";
+        }
 
 
 

@@ -5,8 +5,8 @@ public abstract class StreamArray
     public BinaryWriter _bw;
     public FileStream _fs;
     public BinaryReader _br;
-    protected long _dataStart;
-    private long _dataEnd;
+    public long _dataStart;
+    public long _dataEnd;
 
     public StreamArray(long dataStart, long dataEnd,
          FileStream fs, BinaryWriter bw, BinaryReader br)

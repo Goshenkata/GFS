@@ -274,4 +274,18 @@ public class FilesystemData : StreamArray, IEnumerable<FileSystemNode>
             }
         }
     }
+
+    public long GetLength()
+    {
+        return _dataEnd - _dataStart;
+    
+    }
+    public void Print()
+    {
+        for(int i = 0; i < 10; i++)
+        {
+            var node = LoadById(i);
+            Console.WriteLine(node.ToStringAll());
+        }
+    }
 }
